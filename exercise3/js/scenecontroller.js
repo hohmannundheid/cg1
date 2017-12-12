@@ -41,12 +41,13 @@ SceneController.prototype.setupGUI = function()
         lightPosition: new THREE.Vector3(0.75, 0.75, 0.75),
         specularColor: new THREE.Vector3(1.0, 1.0, 1.0),
         ambientColor: new THREE.Vector3(0.3, 0.0, 0.0),
-        diffuseColor: new THREE.Vector3(0.5, 0.0, 0.0)
+        diffuseColor: new THREE.Vector3(0.5, 0.0, 0.0),
+        time: 1.0
     };
 
     this.gui.add(this.params, 'magnitude', 0.0, 1.0).name("Magnitude").onChange(function(newValue){this.object.screenController.updateModel()});
     this.gui.add(this.params, 'shader', [ 'simple', 'flat', 'blinnphong', 'phong', 'gourad', 'toon', 'animated', 'cool'] ).name('Shader').onChange(function(newValue){this.object.screenController.changeShader()});
-    
+
     this.gui.add(this.params, 'lightX', -1.0, 1.0).name("lightX").onChange(function(newValue){this.object.screenController.updateModel()});
     this.gui.add(this.params, 'lightY', -1.0, 1.0).name("lightY").onChange(function(newValue){this.object.screenController.updateModel()});
     this.gui.add(this.params, 'lightZ', -1.0, 1.0).name("lightZ").onChange(function(newValue){this.object.screenController.updateModel()});
@@ -101,7 +102,7 @@ SceneController.prototype.setupGeometry = function()
         specularColor: {type: "v3", value: this.params.specularColor},
         ambientColor: {type: "v3", value: this.params.ambientColor},
         diffuseColor: {type: "v3", value: this.params.diffuseColor},
-        time: {value: 1.0}
+        time: {type: "f", value: this.params.time}
     };
 
     this.material = new THREE.ShaderMaterial( {
@@ -135,7 +136,7 @@ SceneController.prototype.setupLight = function()
 {
     // https://threejs.org/docs/#api/lights/PointLight
     this.light = new THREE.PointLight(0xffffcc, 1, 100);
-    
+
     var lightGeometry = new THREE.SphereGeometry(0.02, 16, 8);
     var lightMat = new THREE.MeshStandardMaterial({
         emissive: 0xffff00,
@@ -154,6 +155,7 @@ SceneController.prototype.setupLight = function()
 }
 
 SceneController.prototype.render = function() {
+
     this.renderer.render( this.scene, this.camera );
     this.stats.update();
 }
@@ -161,7 +163,10 @@ SceneController.prototype.render = function() {
 SceneController.prototype.animate = function()
 {
     //bind? --> https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind
-    this.uniforms.time.value = this.clock.getDelta();
+    var delta = this.clock.getElapsedTime();
+    this.uniforms.time.value += delta / 1000;
+    this.updateModel();
+
     requestAnimationFrame(this.animate.bind(this));
     this.stats.update();
     this.controls.update();

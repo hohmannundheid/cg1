@@ -218,19 +218,22 @@
 
     <!-- Animated shader -->
     <script id="vertex-animated" type="x-shader/x-vertex">
-        uniform float magnitude;
-        uniform vec3 ambientColor;
-        uniform vec3 specularColor;
-        uniform vec3 diffuseColor;
-        uniform vec3 lightPosition;
-
+        uniform float time;
+        varying vec3 vNormal;
         void main() {
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            vNormal = normal;
+            vec3 offset = position;
+            float dist = ((sin(time) * 0.5 + 0.5) / 2.0);
+            offset.xyz += normal * dist;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(offset, 1.0);
     	}
     </script>
 
     <script id="fragment-animated" type="x-shader/x-fragment">
+        uniform float magnitude;
+        varying vec3 vNormal;
         void main() {
+            gl_FragColor = vec4(vNormal * magnitude, 1.0);
         }
     </script>
 
