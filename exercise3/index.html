@@ -1,0 +1,255 @@
+<html>
+<head>
+    <title>CG1 Exercise 03 - Shader</title>
+    <!-- import main JavaScript module using RequireJS -->
+    <script src="js/libs/three.min.js"></script>
+    <script src="js/libs/controls/OrbitControls.js"></script>
+    <script src="js/libs/controls/TrackballControls.js"></script>
+    <script src="js/libs/stats.min.js"></script>
+    <script src="js/libs/Tween.js"></script>
+    <script src="js/libs/dat.gui.min.js"></script>
+    <script src="js/util.js"></script>
+    <script src="js/scenecontroller.js"></script>
+    <script src="js/htmlcontroller.js"></script>
+    <script src="js/main.js"></script>
+
+    <!-- import style sheet -->
+    <link rel="stylesheet" type="text/css" media="screen" href="style.css">
+
+</head>
+
+<body onLoad="main()">
+    <pre id="error"></pre>
+
+    <!-- we create a script for each shader -->
+    <!-- Dynamic shader -->
+    <script id="vertex-simple" type="x-shader/x-vertex">
+    	void main() {
+        //projectionMatrix, modelViewMatrix and position are built-in uniform variables
+        //gl_Position is the predefined output variable
+        //this operation transforms the vertex position to clip space
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    	}
+    </script>
+
+    <script id="fragment-simple" type="x-shader/x-fragment">
+     uniform float magnitude;
+     void main() {
+        //this colors all fragments (pixels) in the same color (RGBA)
+    		gl_FragColor = vec4(0.1, 0.3, 0.8, 1.0) * magnitude;
+    	}
+    </script>
+
+    <!-- Flat shader -->
+    <script id="vertex-flat" type="x-shader/x-vertex">
+        varying vec3 vNormal;
+        void main() {
+            vNormal = normal;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    	}
+    </script>
+
+    <script id="fragment-flat" type="x-shader/x-fragment">
+        varying vec3 vNormal;
+        uniform float magnitude;
+        void main() {
+            gl_FragColor = vec4(((vNormal + vec3(1.0, 1.0, 1.0)) / 2.0) * magnitude, 1.0);
+        }
+    </script>
+
+    <!-- Blinn-Phong shader -->
+    <script id="vertex-blinnphong" type="x-shader/x-vertex">
+        uniform vec3 lightPosition;
+
+        varying vec3 vPos;
+		varying vec3 vNormal;
+        varying vec3 vLight;
+        void main() {
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            vec4 vertPos4 = modelViewMatrix * vec4(position, 1.0);
+            vPos = vec3(vertPos4) / vertPos4.w;
+            vec4 vLight4 = modelViewMatrix * vec4(lightPosition, 1.0);
+            vLight = vec3(vLight4) / vLight4.w;
+            vNormal = vec3(modelViewMatrix * vec4(normal, 0.0)); 
+        }
+    </script>
+
+    <script id="fragment-blinnphong" type="x-shader/x-fragment">
+        uniform float magnitude;
+        uniform vec3 ambientColor;
+        uniform vec3 specularColor;
+        uniform vec3 diffuseColor;
+
+        varying vec3 vPos;
+        varying vec3 vNormal;
+        varying vec3 vLight;
+        void main() {
+            vec3 N = normalize(vNormal);
+            vec3 L = normalize(vLight - vPos);
+
+            float diffusalFactor = max(dot(L, N), 0.0);
+            diffusalFactor = clamp(diffusalFactor, 0.0, 1.0);
+            vec3 diffusal = diffuseColor * diffusalFactor;
+            
+            vec3 E = normalize(-vPos);
+            vec3 H = normalize(L + E);
+
+            float specAngle = max(dot(H, N), 0.0);
+            float specularFactor = pow(specAngle, magnitude * 16.0);
+            vec3 specular = specularColor * specularFactor;
+
+            gl_FragColor = vec4(ambientColor + diffusal + specular, 1.0);
+        }
+    </script>
+
+    <!-- Phong shader -->
+    <script id="vertex-phong" type="x-shader/x-vertex">
+        uniform vec3 lightPosition;
+
+        varying vec3 vPos;
+		varying vec3 vNormal;
+        varying vec3 vLight;
+        void main() {
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            vec4 vertPos4 = modelViewMatrix * vec4(position, 1.0);
+            vPos = vec3(vertPos4) / vertPos4.w;
+            vec4 vLight4 = modelViewMatrix * vec4(lightPosition, 1.0);
+            vLight = vec3(vLight4) / vLight4.w;
+            vNormal = vec3(modelViewMatrix * vec4(normal, 0.0)); 
+        }
+    </script>
+
+    <script id="fragment-phong" type="x-shader/x-fragment">
+        uniform float magnitude;
+        uniform vec3 ambientColor;
+        uniform vec3 specularColor;
+        uniform vec3 diffuseColor;
+
+		varying vec3 vNormal;
+		varying vec3 vPos;
+        varying vec3 vLight;
+        void main() {
+            vec3 N = normalize(vNormal);
+            vec3 L = normalize(vLight - vPos);
+            vec3 R = reflect(-L, N);
+            vec3 E = normalize(-vPos);
+
+            vec3 diffusal = diffuseColor * max(dot(N, L), 0.0);
+            diffusal = clamp(diffusal, 0.0, 1.0);
+    
+            vec3 specular = specularColor * pow(max(dot(R, E), 0.0), magnitude * 16.0);
+            specular = clamp(specular, 0.0, 1.0);
+
+            gl_FragColor = vec4(ambientColor + diffusal + specular, 1.0);
+        }
+    </script>
+
+    <!-- Gourad shader -->
+    <script id="vertex-gourad" type="x-shader/x-vertex">
+        uniform float magnitude;
+        uniform vec3 ambientColor;
+        uniform vec3 specularColor;
+        uniform vec3 diffuseColor;
+        uniform vec3 lightPosition;
+
+        varying vec4 vColor;
+        void main() {
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            vec4 vertPos4 = modelViewMatrix * vec4(position, 1.0);
+            vec3 vertPos = vec3(vertPos4) / vertPos4.w;
+
+            vec4 lightPos4 = modelViewMatrix * vec4(lightPosition, 1.0);
+            vec3 lightPos = vec3(lightPos4) / lightPos4.w;
+            
+            vec3 L = normalize(lightPos - vertPos);
+            vec3 N = vec3(modelViewMatrix * vec4(normal, 0.0));
+            vec3 R = reflect(-L, N);
+            vec3 E = normalize(-vertPos);
+            
+            vec3 diffusal = diffuseColor * max(dot(N, L), 0.0); 
+            diffusal = clamp(diffusal, 0.0, 1.0);
+
+            vec3 specular = specularColor * pow(max(dot(R, E), 0.0), magnitude * 16.0);
+            specular = clamp(specular, 0.0, 1.0);
+
+            vColor = vec4(ambientColor + specular + diffusal, 1.0);
+    	}
+    </script>
+
+    <script id="fragment-gourad" type="x-shader/x-fragment">
+        varying vec4 vColor;
+        void main() {
+          gl_FragColor = vColor;
+        }
+    </script>
+    
+    <!-- Toon shader -->
+    <script id="vertex-toon" type="x-shader/x-vertex">
+        varying vec3 vNormal;
+        void main() {
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            vNormal = normal;
+    	}
+    </script>
+
+    <script id="fragment-toon" type="x-shader/x-fragment">
+        uniform float magnitude;
+        uniform vec3 lightPosition;
+
+        varying vec3 vNormal;
+        void main() {
+            float intensity = dot(lightPosition, normalize(vNormal));
+
+            vec4 color;
+            if (intensity > 0.95) {
+                color = vec4(1.0, 0.5, 0.5, 1.0) * magnitude;
+            } else if (intensity > 0.8) {
+                color = vec4(0.8, 0.4, 0.4, 1.0) * magnitude;
+            } else if (intensity > 0.6) {
+                color = vec4(0.6, 0.3, 0.3, 1.0) * magnitude;
+            } else if (intensity > 0.4) {
+                color = vec4(0.4, 0.2, 0.2, 1.0) * magnitude;
+            } else {
+                color = vec4(0.2, 0.1, 0.1, 1.0) * magnitude;
+            }
+            gl_FragColor = color;
+        }
+    </script>
+
+    <!-- Animated shader -->
+    <script id="vertex-animated" type="x-shader/x-vertex">
+        uniform float magnitude;
+        uniform vec3 ambientColor;
+        uniform vec3 specularColor;
+        uniform vec3 diffuseColor;
+        uniform vec3 lightPosition;
+
+        void main() {
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    	}
+    </script>
+
+    <script id="fragment-animated" type="x-shader/x-fragment">
+        void main() {
+        }
+    </script>
+
+    <!-- Cool shader -->
+    <script id="vertex-cool" type="x-shader/x-vertex">
+        uniform float magnitude;
+        uniform vec3 ambientColor;
+        uniform vec3 specularColor;
+        uniform vec3 diffuseColor;
+        uniform vec3 lightPosition;
+
+        void main() {
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    	}
+    </script>
+
+    <script id="fragment-cool" type="x-shader/x-fragment">
+        void main() {
+        }
+    </script>
+</body>
+</html>
