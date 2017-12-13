@@ -61,9 +61,7 @@ SceneController.prototype.setupClock = function() {
 
 SceneController.prototype.setupCamera = function()
 {
-    var VIEW_ANGLE = 70;
-    var ASPECT_RATIO = window.innerWidth / window.innerHeight;
-    var NEAR_PLANE = 0.01;
+    var VIEW_ANGLE = 70; var ASPECT_RATIO = window.innerWidth / window.innerHeight; var NEAR_PLANE = 0.01;
     var FAR_PLANE = 10;
 
     // https://threejs.org/docs/#api/cameras/PerspectiveCamera
@@ -102,7 +100,8 @@ SceneController.prototype.setupGeometry = function()
         specularColor: {type: "v3", value: this.params.specularColor},
         ambientColor: {type: "v3", value: this.params.ambientColor},
         diffuseColor: {type: "v3", value: this.params.diffuseColor},
-        time: {type: "f", value: this.params.time}
+        time: {type: "f", value: this.params.time},
+        textureSampler: {type: "t", value: null}
     };
 
     this.material = new THREE.ShaderMaterial( {
@@ -111,8 +110,14 @@ SceneController.prototype.setupGeometry = function()
       fragmentShader: document.getElementById( 'fragment-simple' ).textContent
     });
 
+    var texture = new THREE.TextureLoader().load('texture.jpeg');
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    this.uniforms.textureSampler.value = texture;
+    this.texturedMat = new THREE.MeshBasicMaterial({map: texture});
+
     var boxGeometry = new THREE.BoxGeometry( 0.2, 0.2, 0.2 );
-    this.meshBox = new THREE.Mesh( boxGeometry, this.material );
+    this.meshBox = new THREE.Mesh( boxGeometry, this.material);
     this.meshBox.position.set(0.3,0,0);
     this.scene.add( this.meshBox );
 
@@ -187,18 +192,26 @@ SceneController.prototype.updateModel = function()
 
 SceneController.prototype.changeShader = function()
 {
-  //the name of the shades in the dropdown correspond to the suffix of the shaders.
-  this.material = new THREE.ShaderMaterial( {
-    uniforms : this.uniforms,
-    vertexShader: document.getElementById( 'vertex-' + this.params.shader ).textContent,
-    fragmentShader: document.getElementById( 'fragment-' + this.params.shader ).textContent
-  });
+    //the name of the shades in the dropdown correspond to the suffix of the shaders.
+    if (this.params.shader == 'cool') {
+        this.material = new THREE.ShaderMaterial( {
+            map : this.texturedMat,
+            uniforms : this.uniforms,
+            vertexShader: document.getElementById( 'vertex-' + this.params.shader ).textContent,
+            fragmentShader: document.getElementById( 'fragment-' + this.params.shader ).textContent
+        });
+    } else {
+        this.material = new THREE.ShaderMaterial( {
+            uniforms : this.uniforms,
+            vertexShader: document.getElementById( 'vertex-' + this.params.shader ).textContent,
+            fragmentShader: document.getElementById( 'fragment-' + this.params.shader ).textContent
+        });
+    }
 
+    //apply the new material to all meshes. Usually, this should be an array.
+    this.meshBox.material = this.material;
+    this.meshSphere.material = this.material;
+    this.meshKnot.material = this.material;
 
-  //apply the new material to all meshes. Usually, this should be an array.
-  this.meshBox.material = this.material;
-  this.meshSphere.material = this.material;
-  this.meshKnot.material = this.material;
-
-  this.render();
+    this.render();
 }
