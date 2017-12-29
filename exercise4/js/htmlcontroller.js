@@ -19,8 +19,8 @@ HtmlController.prototype.onWindowResize = function()
     this.sceneController.texCamera.updateProjectionMatrix();
     this.sceneController.camera.aspect = window.innerWidth / window.innerHeight/2;
     this.sceneController.camera.updateProjectionMatrix();
-    this.sceneController.cubeCamera.aspect = window.innerWidth / window.innerHeight/2;
-    this.sceneController.cubeCamera.updateProjectionMatrix();
+    //this.sceneController.cubeCamera.aspect = window.innerWidth / window.innerHeight/2;
+    //this.sceneController.cubeCamera.updateProjectionMatrix();
 
     this.sceneController.texRenderer.setSize( window.innerWidth/2 - 20, window.innerHeight);
     this.sceneController.renderer.setSize( window.innerWidth/2  - 20, window.innerHeight);

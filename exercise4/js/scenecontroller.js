@@ -71,24 +71,50 @@ SceneController.prototype.setupGUI = function()
 
 SceneController.prototype.changeTexture = function()
 {
+    this.scene.remove(this.mesh);
+    this.texture = new THREE.TextureLoader().load('js/textures/' + this.params.texImg + '.jpg');
+    this.uniforms.texture.value = this.texture;
+    this.texturedMat = new THREE.MeshBasicMaterial({map: this.texture});
+
+    var material = new THREE.ShaderMaterial({
+        map: this.texturedMat,
+        uniforms: this.uniforms,
+        vertexShader: this.vertShader,
+        fragmentShader: this.fragShader,
+    });
+
+    this.mesh.material = material;
+    this.scene.add(this.mesh);
     this.render();
 };
 
 SceneController.prototype.changeTextureStyle = function()
 {
+    if (this.params.texStyle == 'Nearest') {
+        this.texture.minFilter = THREE.NearestFilter;
+    } else if (this.params.texStyle == 'Linear') {
+        this.texture.minFilter = THREE.LinearFilter;
+    } else if (this.params.texStyle == 'MipMap Nearest') {
+        this.texture.minFilter = THREE.LinearMipMapNearestFilter;
+    } else {
+        this.texture.minFilter = THREE.LinearMipMapLinearFilter;
+    }
+    this.texture.needsUpdate = true;
     this.render();
 };
 
 SceneController.prototype.changeModel = function()
 {
-    if (this.params.model.localeCompare("quad") === 0)
+    if (this.params.model.localeCompare("quad") === 0) {
         this.mesh.geometry = new THREE.PlaneBufferGeometry( 0.5, 0.5 );
-    else if (this.params.model.localeCompare("box") === 0)
+    }
+    else if (this.params.model.localeCompare("box") === 0) {
         this.mesh.geometry = new THREE.BoxGeometry( 0.2, 0.2, 0.2 );
-    else if (this.params.model.localeCompare("sphere") === 0)
+    }
+    else if (this.params.model.localeCompare("sphere") === 0) {
         this.mesh.geometry = new THREE.SphereGeometry(0.2, 30, 30);
+    }
     else if (this.params.model.localeCompare("torus") === 0) {
-        window.console.log(this.params.model);
         this.mesh.geometry = new THREE.TorusGeometry(0.1, 0.05, 8, 10);
     }
     this.render();
@@ -147,15 +173,34 @@ SceneController.prototype.bumpMap = function(){
 
 SceneController.prototype.setupGeometry = function()
 {
+    this.uniforms = {
+        texture: {type: "t", value: null}
+    };
+
     this.vertShader = document.getElementById('vertexShader').innerHTML;
     this.fragShader = document.getElementById('fragmentShader').innerHTML;
 
-    var geometry = new THREE.PlaneBufferGeometry( 0.5, 0.5 );
-    var material = new THREE.MeshLambertMaterial( { color: "blue"} );
+    var texGeometry = new THREE.PlaneBufferGeometry(0.5, 0.5);
+    var texMaterial = new THREE.MeshLambertMaterial({color: "blue"});
+
+    this.texture = new THREE.TextureLoader().load('js/textures/' + this.params.texImg + '.jpg');
+    this.uniforms.texture.value = this.texture;
+    this.texturedMat = new THREE.MeshBasicMaterial({map: this.texture});
+
+    this.geometry = new THREE.PlaneBufferGeometry( 0.5, 0.5 );
+    var material = new THREE.ShaderMaterial({
+        map: this.texturedMat,
+        uniforms: this.uniforms,
+        vertexShader: this.vertShader,
+        fragmentShader: this.fragShader,
+    });
     // Render object in wireframe for debugging
     // var material = new THREE.MeshLambertMaterial( { color: "blue", wireframe: true} );
-    this.mesh = new THREE.Mesh( geometry, material );
-    this.scene.add( this.mesh );
+    this.texMesh = new THREE.Mesh( texGeometry, material );
+    this.mesh = new THREE.Mesh( this.geometry, material );
+
+    this.texScene.add(this.texMesh);
+    this.scene.add(this.mesh);
 
 };
 
