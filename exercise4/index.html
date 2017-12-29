@@ -24,8 +24,7 @@
 
     void main() {
         vUv = uv;
-
-        gl_Position =   projectionMatrix * modelViewMatrix * vec4(position,1.0);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
     }
 </script>
 
@@ -39,6 +38,27 @@
     }
 </script>
 
+<script id="sphericalVertexShader" type="x-shader/x-vertex">
+    varying vec3 vNormal;
+    varying vec4 texCoords;
+
+    void main() {
+        vNormal = normal;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        texCoords = vec4(position, 1.0);
+    }
+</script>
+
+<script id="sphericalFragmentShader" type="x-shader/x-fragment">
+    uniform sampler2D texture;
+    varying vec4 texCoords;
+
+    void main() {
+		vec2 uV = vec2((atan(texCoords.y, texCoords.x) / 3.1415926 + 1.0) * 0.5,
+					   (asin(texCoords.z) / 3.1415926 + 0.5));
+        gl_FragColor = texture2D(texture, uV);
+    }
+</script>
 
 <body onLoad="main()">
     <!-- this element will be used to diplay errors -->

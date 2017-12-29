@@ -154,6 +154,24 @@ SceneController.prototype.setupControls = function()
 
 SceneController.prototype.sphericalMap = function()
 {
+    this.scene.remove(this.mesh);
+    if (this.params.sMapping) {
+        this.vertShader = document.getElementById('sphericalVertexShader').innerHTML;
+        this.fragShader = document.getElementById('sphericalFragmentShader').innerHTML;
+    } else {
+        this.vertShader = document.getElementById('vertexShader').innerHTML;
+        this.fragShader = document.getElementById('fragmentShader').innerHTML;
+    }
+
+    var material = new THREE.ShaderMaterial({
+        map: this.texturedMat,
+        uniforms: this.uniforms,
+        vertexShader: this.vertShader,
+        fragmentShader: this.fragShader,
+    });
+
+    this.mesh.material = material;
+    this.scene.add(this.mesh);
     this.render();
 };
 
