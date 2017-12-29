@@ -39,23 +39,32 @@
 </script>
 
 <script id="sphericalVertexShader" type="x-shader/x-vertex">
-    varying vec3 vNormal;
     varying vec4 texCoords;
 
     void main() {
-        vNormal = normal;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         texCoords = vec4(position, 1.0);
     }
 </script>
 
 <script id="sphericalFragmentShader" type="x-shader/x-fragment">
+	uniform vec3 sphereCenter;
     uniform sampler2D texture;
     varying vec4 texCoords;
 
     void main() {
-		vec2 uV = vec2((atan(texCoords.y, texCoords.x) / 3.1415926 + 1.0) * 0.5,
-					   (asin(texCoords.z) / 3.1415926 + 0.5));
+        const float PI = 3.1415926;
+        float X = sphereCenter.x - texCoords.x;
+        float Y = sphereCenter.y - texCoords.y;
+        float Z = sphereCenter.z - texCoords.z;
+        float atanYX = atan(Y, X);
+        atanYX = clamp(atanYX, -1.0, 1.0);
+
+        float powX = pow(X, 2.0);
+        float powY = pow(Y, 2.0);
+        float atanXZ = atan(sqrt(powX + powY), Z);
+
+        vec2 uV = vec2(atanYX + PI / (PI * 2.0), atanXZ / PI);
         gl_FragColor = texture2D(texture, uV);
     }
 </script>
