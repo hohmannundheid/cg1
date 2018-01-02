@@ -55,7 +55,7 @@ SceneController.prototype.setupGUI = function()
         bumpMap: false
     };
 
-    var texNames = [ 'earth', 'colors', 'disturb', 'checker', 'checkerl', 'rings'];
+    var texNames = [ 'earth', 'colors', 'disturb', 'checker', 'checkerl', 'rings', 'wood'];
 
     this.gui.add(this.params, 'texImg', texNames ).name('Texture Images').onChange(function(newValue){this.object.screenController.changeTexture()});
     this.gui.add(this.params, 'model', [ 'quad', 'box', 'sphere', 'torus'] ).name('3D Model').onChange(function(newValue){this.object.screenController.changeModel()});
@@ -206,7 +206,31 @@ SceneController.prototype.envMap = function()
 };
 
 SceneController.prototype.bumpMap = function(){
+    this.scene.remove(this.mesh);
+    if (this.params.bumpMap) {
+        var bump = new THREE.TextureLoader().load('js/textures/wood_bump.jpg');
 
+        var material = new THREE.MeshPhongMaterial({
+            map: this.texture,
+            bumpMap: bump,
+            bumpScale: 0.2
+        });
+
+        this.mesh.material = material;
+        this.scene.add(this.mesh);
+        this.render();
+    } else {
+        var material = new THREE.ShaderMaterial({
+            map: this.texturedMat,
+            uniforms: this.uniforms,
+            vertexShader: this.vertShader,
+            fragmentShader: this.fragShader,
+        });
+
+        this.mesh.material = material;
+        this.scene.add(this.mesh);
+        this.render();
+    }
 };
 
 SceneController.prototype.setupGeometry = function()
