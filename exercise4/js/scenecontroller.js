@@ -179,6 +179,24 @@ SceneController.prototype.sphericalMap = function()
 
 SceneController.prototype.silhouetteShaders = function()
 {
+    this.scene.remove(this.mesh);
+    if (this.params.drawSilhouette) {
+        this.vertShader = document.getElementById('silhouetteVertexShader').innerHTML;
+        this.fragShader = document.getElementById('silhouetteFragmentShader').innerHTML;
+    } else {
+        this.vertShader = document.getElementById('vertexShader').innerHTML;
+        this.fragShader = document.getElementById('fragmentShader').innerHTML;
+    }
+
+    var material = new THREE.ShaderMaterial({
+        map: this.texturedMat,
+        uniforms: this.uniforms,
+        vertexShader: this.vertShader,
+        fragmentShader: this.fragShader,
+    });
+
+    this.mesh.material = material;
+    this.scene.add(this.mesh);
     this.render();
 };
 
