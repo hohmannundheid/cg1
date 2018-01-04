@@ -158,8 +158,6 @@ SceneController.prototype.sphericalMap = function()
     if (this.params.sMapping) {
         this.vertShader = document.getElementById('sphericalVertexShader').innerHTML;
         this.fragShader = document.getElementById('sphericalFragmentShader').innerHTML;
-
-		this.uniforms.sphereCenter.value = this.mesh.position;
     } else {
         this.vertShader = document.getElementById('vertexShader').innerHTML;
         this.fragShader = document.getElementById('fragmentShader').innerHTML;
@@ -236,8 +234,7 @@ SceneController.prototype.bumpMap = function(){
 SceneController.prototype.setupGeometry = function()
 {
     this.uniforms = {
-        texture: {type: "t", value: null},
-		sphereCenter: {type: "v3", value: new THREE.Vector3(0.0, 0.0, 0.0)}
+        texture: {type: "t", value: null}
     };
 
     this.vertShader = document.getElementById('vertexShader').innerHTML;
