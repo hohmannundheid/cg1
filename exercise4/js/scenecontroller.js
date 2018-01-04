@@ -200,6 +200,35 @@ SceneController.prototype.silhouetteShaders = function()
 
 SceneController.prototype.envMap = function()
 {
+    var envTexture = new THREE.TextureLoader().load('js/textures/indoor.jpg');
+    envTexture.mapping = THREE.EquirectangularReflectionMapping;
+    envTexture.magFilter = THREE.LinearFilter;
+    envTexture.minFilter = THREE.LinearMipMapLinearFilter;
+
+    var rectShader = THREE.ShaderLib['equirect'];
+    var material = new THREE.ShaderMaterial({
+        fragmentShader: rectShader.fragmentShader,
+        vertexShader: rectShader.vertexShader,
+        uniforms: rectShader.uniforms,
+        depthWrite: false,
+        side: THREE.BackSide
+    });
+
+    material.uniforms['tEquirect'].value = envTexture;
+
+    this.cubeMesh = new THREE.Mesh(new THREE.BoxBufferGeometry(100, 100, 100), material);
+    this.scene.add(this.cubeMesh);
+
+    var geom = new THREE.SphereBufferGeometry(0.4, 48, 24);
+    var sphereMaterial = new THREE.MeshLambertMaterial({envMap: envTexture});
+    this.sphereMesh = new THREE.Mesh(geom, sphereMaterial);
+    this.scene.add(this.sphereMesh);
+
+    if (!this.params.envMapping) {
+        this.scene.remove(this.cubeMesh);
+        this.scene.remove(this.sphereMesh);
+    }
+
     this.render();
 };
 
@@ -215,8 +244,6 @@ SceneController.prototype.bumpMap = function(){
         });
 
         this.mesh.material = material;
-        this.scene.add(this.mesh);
-        this.render();
     } else {
         var material = new THREE.ShaderMaterial({
             map: this.texturedMat,
@@ -226,9 +253,9 @@ SceneController.prototype.bumpMap = function(){
         });
 
         this.mesh.material = material;
-        this.scene.add(this.mesh);
-        this.render();
     }
+    this.scene.add(this.mesh);
+    this.render();
 };
 
 SceneController.prototype.setupGeometry = function()
