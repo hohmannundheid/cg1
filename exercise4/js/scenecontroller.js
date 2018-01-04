@@ -200,6 +200,9 @@ SceneController.prototype.silhouetteShaders = function()
 
 SceneController.prototype.envMap = function()
 {
+    this.scene.remove(this.cubeMesh);
+    this.scene.remove(this.sphereMesh);
+
     var envTexture = new THREE.TextureLoader().load('js/textures/indoor.jpg');
     envTexture.mapping = THREE.EquirectangularReflectionMapping;
     envTexture.magFilter = THREE.LinearFilter;
@@ -217,17 +220,16 @@ SceneController.prototype.envMap = function()
     material.uniforms['tEquirect'].value = envTexture;
 
     this.cubeMesh = new THREE.Mesh(new THREE.BoxBufferGeometry(100, 100, 100), material);
-    this.scene.add(this.cubeMesh);
 
     var geom = new THREE.SphereBufferGeometry(0.4, 48, 24);
     var sphereMaterial = new THREE.MeshLambertMaterial({envMap: envTexture});
     this.sphereMesh = new THREE.Mesh(geom, sphereMaterial);
-    this.scene.add(this.sphereMesh);
 
-    if (!this.params.envMapping) {
-        this.scene.remove(this.cubeMesh);
-        this.scene.remove(this.sphereMesh);
-    }
+    this.cubeMesh.visible = this.params.envMapping;
+    this.sphereMesh.visible = this.params.envMapping;
+
+    this.scene.add(this.cubeMesh);
+    this.scene.add(this.sphereMesh);
 
     this.render();
 };
