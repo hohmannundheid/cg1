@@ -78,15 +78,17 @@ RaytracingRenderer.prototype.render = function ()
 	// iterating over imageData requires first loop over y, second loop over x
 	var imageData = this.context.createImageData(this.canvasWidth, this.canvasHeight);
 
-	//remove this method once you start working
-	this.fillImageWithNoisyStripes(imageData);
-
 	//calculate camera cameraPosition, camera normal matrix and perspective
 	//in my implementation, perspective is a single float value that depends on the camera FOV and the canvasHeight
+    var cameraPosition = new THREE.Vector3();
+    cameraPosition.setFromMatrixPosition(this.camera.matrixWorld);
+
+    var cameraNormalMatrix;
+
+    var perspective = 0.5 / Math.tan(THREE.Math.degToRad(this.camera.fov * 0.5)) * this.canvasHeight;
 
 	//iterate over all pixels and render
 	//this will set individial pixels. uncomment once you start working
- /*
 	var indexRunner = 0;
 	for(var y = 0; y < this.canvasHeight; y++)
 	{
@@ -109,7 +111,6 @@ RaytracingRenderer.prototype.render = function ()
 			indexRunner += 4;
 		}
 	}
-	*/
 	this.context.putImageData( imageData, 0, 0 );
 
 	clock.stop();
@@ -120,26 +121,6 @@ RaytracingRenderer.prototype.render = function ()
 	this.rendering = false;
 }
 
-RaytracingRenderer.prototype.fillImageWithNoisyStripes = function(imageData)
-{
-	//fill image with noise
-	var indexRunner = 0;
-	for(var y = 0; y < this.canvasHeight; y++)
-	{
-		var c = new THREE.Color(Math.random(),Math.random(),Math.random());
-		for(var x = 0; x < this.canvasWidth; x++)
-		{
-			//set RGBA
-  		imageData.data[indexRunner] = Math.round(255 * c.r);
-  		imageData.data[indexRunner + 1] = Math.round(255 * c.g);
-  		imageData.data[indexRunner + 2] = Math.round(255 * c.b);
-  		imageData.data[indexRunner + 3] = 255;
-			indexRunner += 4;
-		}
-	}
-	this.context.putImageData( imageData, 0, 0 );
-}
-
 RaytracingRenderer.prototype.renderPixel = function(x, y, cameraPosition, cameraNormalMatrix, perspective)
 {
 	var pixelColor = new THREE.Color(0, 0, 0);
@@ -147,6 +128,8 @@ RaytracingRenderer.prototype.renderPixel = function(x, y, cameraPosition, camera
 	//calculate ray origin & direction
 	var rayOrigin = new THREE.Vector3();
 	var direction = new THREE.Vector3();
+    direction.set(x - this.canvasWidth / 2.0, -(y - this.canvasHeight / 2.0), -perspective);
+    direction.applyMatrix3(cameraNormalMatrix).normalize();
 
 	this.spawnRay(rayOrigin, direction, pixelColor, 0);
 
@@ -158,7 +141,10 @@ RaytracingRenderer.prototype.renderPixel = function(x, y, cameraPosition, camera
 RaytracingRenderer.prototype.spawnRay = function(origin, direction, pixelColor, recursionDepth)
 {
 		//create raycaster and intersect with children of scene
+        var raycaster = new THREE.Raycaster();
+        raycaster.set(origin, direction);
 
+        var intersects = raycaster.intersectObjects(this.scene.children);
 		//if intersections, compute color (this is the main part of the exercise)
 
 		//if material is mirror and with maxRecursionDepthrecursion, spawnRay again
