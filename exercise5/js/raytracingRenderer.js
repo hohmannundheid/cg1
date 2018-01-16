@@ -83,7 +83,7 @@ RaytracingRenderer.prototype.render = function ()
     var cameraPosition = new THREE.Vector3();
     cameraPosition.setFromMatrixPosition(this.camera.matrixWorld);
 
-    var cameraNormalMatrix;
+    var cameraNormalMatrix = this.camera.normalMatrix;
 
     var perspective = 0.5 / Math.tan(THREE.Math.degToRad(this.camera.fov * 0.5)) * this.canvasHeight;
 
@@ -99,15 +99,14 @@ RaytracingRenderer.prototype.render = function ()
 			if(this.superSamplingRate < 1)
 			{
 				pixelColor = this.renderPixel(x, y, cameraPosition, cameraNormalMatrix, perspective);
-			}else
+			} else
 			{
 				//TODO for ex5#
 			}
-
-  		imageData.data[indexRunner] = pixelColor.r * 255;
-  		imageData.data[indexRunner + 1] = pixelColor.g * 255.0;
-  		imageData.data[indexRunner + 2] = pixelColor.b * 255.0;
-  		imageData.data[indexRunner + 3] = 255;
+            imageData.data[indexRunner] = pixelColor.r * 255;
+            imageData.data[indexRunner + 1] = pixelColor.g * 255.0;
+            imageData.data[indexRunner + 2] = pixelColor.b * 255.0;
+            imageData.data[indexRunner + 3] = 255;
 			indexRunner += 4;
 		}
 	}
@@ -140,14 +139,14 @@ RaytracingRenderer.prototype.renderPixel = function(x, y, cameraPosition, camera
 //good coding style will ease this exercise significantly.
 RaytracingRenderer.prototype.spawnRay = function(origin, direction, pixelColor, recursionDepth)
 {
-		//create raycaster and intersect with children of scene
-        var raycaster = new THREE.Raycaster();
-        raycaster.set(origin, direction);
+    //create raycaster and intersect with children of scene
+    var raycaster = new THREE.Raycaster();
+    raycaster.set(origin, direction);
 
-        var intersects = raycaster.intersectObjects(this.scene.children);
-		//if intersections, compute color (this is the main part of the exercise)
+    var intersects = raycaster.intersectObjects(this.scene.children);
+    //if intersections, compute color (this is the main part of the exercise)
 
-		//if material is mirror and with maxRecursionDepthrecursion, spawnRay again
+    //if material is mirror and with maxRecursionDepthrecursion, spawnRay again
 }
 
 RaytracingRenderer.prototype.computeNormal = function(point, face, vertices, object)
