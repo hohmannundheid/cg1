@@ -143,7 +143,7 @@ RaytracingRenderer.prototype.spawnRay = function(origin, direction, pixelColor, 
     var raycaster = new THREE.Raycaster();
     raycaster.set(origin, direction);
 
-    var intersects = raycaster.intersectObjects(this.scene.children);
+    var intersects = raycaster.intersectObjects(this.scene.children, true);
     if (intersects.length > 0) {
         pixelColor.r += intersects[0].object.material.color.r;
         pixelColor.g += intersects[0].object.material.color.g;

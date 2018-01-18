@@ -126,6 +126,8 @@ SceneController.prototype.setupGeometry = function()
           mirrorMaterialSmooth.mirror = true;
           mirrorMaterialSmooth.reflectivity = 0.3;
 
+          var group = new THREE.Group();
+
           var torusGeometry = new THREE.TorusGeometry(100, 20, 16, 100);
           var planeGeometry = new THREE.BoxGeometry(600, 5, 600);
           var boxGeometry = new THREE.CylinderGeometry(100, 100, 100, 32);
@@ -133,12 +135,12 @@ SceneController.prototype.setupGeometry = function()
           var torus = new THREE.Mesh( torusGeometry, phongMaterialBlue );
           torus.scale.multiplyScalar( 0.5 );
           torus.position.set( - 50, - 250 + 5, - 50 );
-          this.scene.add(torus);
+          group.add(torus);
 
           var torus2 = new THREE.Mesh( torusGeometry, phongMaterialRed );
           torus2.scale.multiplyScalar( 0.5 );
           torus2.position.set( 175, - 250 + 5, - 150 );
-          this.scene.add(torus2);
+          group.add(torus2);
 
           var torus3 = new THREE.Mesh( torusGeometry, phongMaterialGreen );
           torus3.scale.multiplyScalar( 0.5 );
@@ -149,7 +151,9 @@ SceneController.prototype.setupGeometry = function()
           var box = new THREE.Mesh( boxGeometry, mirrorMaterialSmooth );
           box.position.set( - 175, - 250 + 2.5, - 150 );
           box.rotation.y = 0.5;
-          this.scene.add(box);
+          group.add(box);
+
+          this.scene.add(group);
 
           // bottom
           var plane = new THREE.Mesh( planeGeometry, phongMaterialBoxBottom );
