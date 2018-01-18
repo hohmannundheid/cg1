@@ -187,21 +187,19 @@ SceneController.prototype.setupGeometry = function()
 SceneController.prototype.setupLight = function()
 {
   	var intensity = 70000;
+    var light = new THREE.PointLight( 0xffffff, intensity * 2 );
+    light.position.set( 0, 0, 300 );
+    light.physicalAttenuation = true;
+    this.scene.add( light );
+    var light = new THREE.PointLight( 0xffaa55, intensity );
+    light.position.set( - 200, 100, 100 );
+    light.physicalAttenuation = true;
+    this.scene.add( light );
 
-		var light = new THREE.PointLight( 0xffffff, intensity * 2 );
-		light.position.set( 0, 0, 300 );
-		light.physicalAttenuation = true;
-		this.scene.add( light );
-    //
-		var light = new THREE.PointLight( 0xffaa55, intensity );
-		light.position.set( - 200, 100, 100 );
-		light.physicalAttenuation = true;
-		this.scene.add( light );
-
-		var light = new THREE.PointLight( 0x55aaff, intensity );
-		light.position.set( 200, 100, 100 );
-		light.physicalAttenuation = true;
-		this.scene.add( light );
+    var light = new THREE.PointLight( 0x55aaff, intensity );
+    light.position.set( 200, 100, 100 );
+    light.physicalAttenuation = true;
+    this.scene.add( light );
 }
 
 SceneController.prototype.render = function() {

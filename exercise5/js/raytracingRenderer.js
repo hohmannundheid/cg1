@@ -32,7 +32,9 @@ var RaytracingRenderer = function (scene, camera)
 	this.autoClear = true;
 
 	//TODO add lights from scene
-	this.lights = [];
+	this.lights = [this.scene.children[0],
+                   this.scene.children[1],
+                   this.scene.children[2]];
 }
 
 RaytracingRenderer.prototype.setClearColor = function ( color, alpha )
