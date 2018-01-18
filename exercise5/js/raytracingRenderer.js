@@ -103,10 +103,10 @@ RaytracingRenderer.prototype.render = function ()
 			{
 				//TODO for ex5#
 			}
-            imageData.data[indexRunner] = pixelColor.r * 255;
+            imageData.data[indexRunner] = pixelColor.r * 255.0;
             imageData.data[indexRunner + 1] = pixelColor.g * 255.0;
             imageData.data[indexRunner + 2] = pixelColor.b * 255.0;
-            imageData.data[indexRunner + 3] = 255;
+            imageData.data[indexRunner + 3] = 255.0;
 			indexRunner += 4;
 		}
 	}
@@ -125,7 +125,7 @@ RaytracingRenderer.prototype.renderPixel = function(x, y, cameraPosition, camera
 	var pixelColor = new THREE.Color(0, 0, 0);
 
 	//calculate ray origin & direction
-	var rayOrigin = new THREE.Vector3();
+    var rayOrigin = cameraPosition;
 	var direction = new THREE.Vector3();
     direction.set(x - this.canvasWidth / 2.0, -(y - this.canvasHeight / 2.0), -perspective);
     direction.applyMatrix3(cameraNormalMatrix).normalize();
@@ -144,6 +144,11 @@ RaytracingRenderer.prototype.spawnRay = function(origin, direction, pixelColor, 
     raycaster.set(origin, direction);
 
     var intersects = raycaster.intersectObjects(this.scene.children);
+    if (intersects.length > 0) {
+        pixelColor.r += intersects[0].object.material.color.r;
+        pixelColor.g += intersects[0].object.material.color.g;
+        pixelColor.b += intersects[0].object.material.color.b;
+    }
     //if intersections, compute color (this is the main part of the exercise)
 
     //if material is mirror and with maxRecursionDepthrecursion, spawnRay again
