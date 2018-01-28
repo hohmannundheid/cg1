@@ -103,6 +103,9 @@ RaytracingRenderer.prototype.render = function ()
 			} else
 			{
 				//TODO for ex5#
+                for (var i = 0; i < samplingRate; i++) {
+                    pixelColor += this.renderPixel(x, y, cameraPosition, cameraNormalMatrix, perspective);
+                }
 			}
             imageData.data[indexRunner] = pixelColor.r * 255.0;
             imageData.data[indexRunner + 1] = pixelColor.g * 255.0;
@@ -149,10 +152,8 @@ RaytracingRenderer.prototype.spawnRay = function(origin, direction, pixelColor, 
     if (intersects.length > 0) {
         // calculate phong model for each intersection point
         var normal = this.computeNormal(intersects[0].point, intersects[0].face, intersects[0].object.geometry.vertices, intersects[0]);
-        //var phong = this.phong(normal, intersects[0].point, intersects[0].object);
-        pixelColor.r += intersects[0].object.material.color.r;
-        pixelColor.g += intersects[0].object.material.color.g;
-        pixelColor.b += intersects[0].object.material.color.b;
+        var phong = this.phong(normal, intersects[0].point, intersects[0].object);
+        pixelColor.add(phong);
     }
 
     //if material is mirror and with maxRecursionDepthrecursion, spawnRay again
@@ -160,21 +161,27 @@ RaytracingRenderer.prototype.spawnRay = function(origin, direction, pixelColor, 
 
 RaytracingRenderer.prototype.phong = function(normal, point, intersectedObject) {
     var N = normal.normalize();
-    var lightPos = this.lights[0].position;
-    var L = lightPos.sub(point).normalize();
-    var testL = L.multiplyScalar(-1.0);
+    var L = this.lights[0].position.sub(point).normalize();
     var R = L.multiplyScalar(-1.0).reflect(N);
-    var E = this.camera.position.normalize();
+    var E = this.camera.position.multiplyScalar(-1.0).normalize();
 
-    var ambientColor = intersectedObject.material.color;
+    var ambientColor = new THREE.Color(0, 0, 0);
+    ambientColor.copy(intersectedObject.material.color);
 
-    var diff = Math.max(N.dot(L), 0.0);
-    var diffusal = intersectedObject.material.color.multiplyScalar(diff);
+    var diffuseFactor = Math.max(N.dot(L), 0.0);
+    var diffuseColor = ambientColor.multiplyScalar(diffuseFactor);
+    //diffuseColor.clamp(0.0, 1.0); // clamp does not seem to work here since diffuse is a Color Object
 
-    var specularColor = intersectedObject.material.specular;
-    var specular = specularColor * Math.pow(Math.max(R.dot(E), 0.0), intersectedObject.material.shininess);
+    var specularColor = new THREE.Color(0, 0, 0);
+    specularColor.copy(intersectedObject.material.specular);
+    specularColor = specularColor.multiplyScalar(Math.pow(Math.max(R.dot(E), 0.0), intersectedObject.material.shininess));
+    //specularColor.clamp(0.0, 1.0); // Same reason as above
 
-    return ambientColor;
+    var finalColor = new THREE.Color(0, 0, 0);
+    finalColor.add(ambientColor);
+    finalColor.add(diffuseColor);
+    finalColor.add(specularColor);
+    return finalColor;
 }
 
 RaytracingRenderer.prototype.computeNormal = function(point, face, vertices, object)
