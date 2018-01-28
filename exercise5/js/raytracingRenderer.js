@@ -31,7 +31,6 @@ var RaytracingRenderer = function (scene, camera)
 
 	this.autoClear = true;
 
-	//TODO add lights from scene
 	this.lights = [this.scene.children[0],
                    this.scene.children[1],
                    this.scene.children[2]];
@@ -146,19 +145,41 @@ RaytracingRenderer.prototype.spawnRay = function(origin, direction, pixelColor, 
     raycaster.set(origin, direction);
 
     var intersects = raycaster.intersectObjects(this.scene.children, true);
+    //if intersections, compute color (this is the main part of the exercise)
     if (intersects.length > 0) {
+        // calculate phong model for each intersection point
+        var normal = this.computeNormal(intersects[0].point, intersects[0].face, intersects[0].object.geometry.vertices, intersects[0]);
+        //var phong = this.phong(normal, intersects[0].point, intersects[0].object);
         pixelColor.r += intersects[0].object.material.color.r;
         pixelColor.g += intersects[0].object.material.color.g;
         pixelColor.b += intersects[0].object.material.color.b;
     }
-    //if intersections, compute color (this is the main part of the exercise)
 
     //if material is mirror and with maxRecursionDepthrecursion, spawnRay again
+}
+
+RaytracingRenderer.prototype.phong = function(normal, point, intersectedObject) {
+    var N = normal.normalize();
+    var lightPos = this.lights[0].position;
+    var L = lightPos.sub(point).normalize();
+    var testL = L.multiplyScalar(-1.0);
+    var R = L.multiplyScalar(-1.0).reflect(N);
+    var E = this.camera.position.normalize();
+
+    var ambientColor = intersectedObject.material.color;
+
+    var diff = Math.max(N.dot(L), 0.0);
+    var diffusal = intersectedObject.material.color.multiplyScalar(diff);
+
+    var specularColor = intersectedObject.material.specular;
+    var specular = specularColor * Math.pow(Math.max(R.dot(E), 0.0), intersectedObject.material.shininess);
+
+    return ambientColor;
 }
 
 RaytracingRenderer.prototype.computeNormal = function(point, face, vertices, object)
 {
 	var computedNormal = new THREE.Vector3();
 	//you will need this for Phong
-	return computedNormal;
+	return face.normal;
 };
