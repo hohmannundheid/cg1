@@ -151,44 +151,65 @@ RaytracingRenderer.prototype.spawnRay = function(origin, direction, pixelColor, 
     //if intersections, compute color (this is the main part of the exercise)
     if (intersects.length > 0) {
         // calculate phong model for each intersection point
-        var normal = this.computeNormal(intersects[0].point, intersects[0].face, intersects[0].object.geometry.vertices, intersects[0]);
-        var phong = this.phong(normal, intersects[0].point, intersects[0].object);
-        pixelColor.add(phong);
+        var normal = this.computeNormal(intersects[0], intersects[0].face);
+        if (this.allLights) {
+            for (var lightIndex = 0; lightIndex < this.lights.length; lightIndex++) {
+                var phong = this.phong(normal, intersects[0].point, lightIndex, intersects[0].object);
+                pixelColor.add(phong);
+            }
+        } else {
+            var phong = this.phong(normal, intersects[0].point, 0, intersects[0].object);
+            pixelColor.add(phong);
+        }
     }
 
     //if material is mirror and with maxRecursionDepthrecursion, spawnRay again
 }
 
-RaytracingRenderer.prototype.phong = function(normal, point, intersectedObject) {
+RaytracingRenderer.prototype.phong = function(normal, point, lightIndex, intersectedObject) {
     var N = normal.normalize();
     var lightPos = new THREE.Vector3();
     lightPos.copy(this.lights[0].position);
+    //var attenuation = 1.0 / (Math.pow(lightPos.length(), 2));
     var L = lightPos.sub(point).normalize();
     var R = L.multiplyScalar(-1.0).reflect(N);
     var E = this.camera.position.multiplyScalar(-1.0).normalize();
 
-    var ambientColor = new THREE.Color(0, 0, 0);
-    ambientColor.copy(intersectedObject.material.color);
+    var materialColor = new THREE.Color(0, 0, 0);
+    materialColor.copy(intersectedObject.material.color);
 
     var diffuseFactor = Math.max(N.dot(L), 0.0);
-    var diffuseColor = ambientColor.multiplyScalar(diffuseFactor);
-    //diffuseColor.clamp(0.0, 1.0); // clamp does not seem to work here since diffuse is a Color Object
+    var diffuseColor = materialColor.multiplyScalar(diffuseFactor);
 
     var specularColor = new THREE.Color(0, 0, 0);
     specularColor.copy(intersectedObject.material.specular);
     specularColor = specularColor.multiplyScalar(Math.pow(Math.max(R.dot(E), 0.0), intersectedObject.material.shininess));
-    //specularColor.clamp(0.0, 1.0); // Same reason as above
 
     var finalColor = new THREE.Color(0, 0, 0);
-    finalColor.add(ambientColor);
     finalColor.add(diffuseColor);
     finalColor.add(specularColor);
+
     return finalColor;
 }
 
-RaytracingRenderer.prototype.computeNormal = function(point, face, vertices, object)
+RaytracingRenderer.prototype.computeNormal = function(intersectedObject, face)
 {
-	var computedNormal = new THREE.Vector3();
-	//you will need this for Phong
-	return face.normal;
+    var vert1 = new THREE.Vector3();
+    var vert2 = new THREE.Vector3();
+    var vert3 = new THREE.Vector3();
+    vert1.copy(intersectedObject.object.geometry.vertices[face.a]);
+    vert2.copy(intersectedObject.object.geometry.vertices[face.b]);
+    vert3.copy(intersectedObject.object.geometry.vertices[face.c]);
+
+    var U = new THREE.Vector3();
+    U = vert2.sub(vert1);
+    var V = new THREE.Vector3();
+    V = vert3.sub(vert1);
+
+    var N = new THREE.Vector3();
+    N.x = (U.y * V.z) - (U.z * V.y);
+    N.y = (U.z * V.x) - (U.x * V.z);
+    N.z = (U.x * V.y) - (U.y * V.x);
+
+    return N;
 };
