@@ -161,7 +161,9 @@ RaytracingRenderer.prototype.spawnRay = function(origin, direction, pixelColor, 
 
 RaytracingRenderer.prototype.phong = function(normal, point, intersectedObject) {
     var N = normal.normalize();
-    var L = this.lights[0].position.sub(point).normalize();
+    var lightPos = new THREE.Vector3();
+    lightPos.copy(this.lights[0].position);
+    var L = lightPos.sub(point).normalize();
     var R = L.multiplyScalar(-1.0).reflect(N);
     var E = this.camera.position.multiplyScalar(-1.0).normalize();
 
