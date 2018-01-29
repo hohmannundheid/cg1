@@ -186,17 +186,17 @@ RaytracingRenderer.prototype.phong = function(origin, normal, point, lightIndex,
     var E = surfacePosition.multiplyScalar(-1.0).normalize();
 
     // Compute light attenuation (fall-off)
-    var attenuation = this.computeAttenuation(this.lights[lightIndex]);
     var intensity = this.lights[lightIndex].intensity;
+    var attenuation = this.computeAttenuation(this.lights[lightIndex]) * intensity;
 
     // Calculate diffuse component
     var materialColor = intersectedObject.material.color.clone();
-    var diffuseFactor = Math.max(normal.dot(L), 0.0) * attenuation * intensity;
+    var diffuseFactor = Math.max(normal.dot(L), 0.0) * attenuation;
     var diffuseColor = materialColor.multiplyScalar(diffuseFactor);
 
     // Calculate specular component
     var specularColor = intersectedObject.material.specular.clone();
-    var specularFactor = Math.pow(Math.max(R.dot(E), 0.0), intersectedObject.material.shininess) * attenuation * intensity;
+    var specularFactor = Math.pow(Math.max(R.dot(E), 0.0), intersectedObject.material.shininess) * attenuation;
     specularColor.multiplyScalar(specularFactor);
 
     return diffuseColor.add(specularColor);
