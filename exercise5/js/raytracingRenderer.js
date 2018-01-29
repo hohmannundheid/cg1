@@ -167,11 +167,15 @@ RaytracingRenderer.prototype.spawnRay = function(origin, direction, pixelColor, 
 }
 
 RaytracingRenderer.prototype.phong = function(normal, point, lightIndex, intersectedObject) {
+    var surfacePosition = point.clone();
+    var modelViewMatrix = intersectedObject.modelViewMatrix.clone();
+    surfacePosition = surfacePosition.applyMatrix4(modelViewMatrix);
+
     var lightPosition = this.lights[lightIndex].position.clone();
-    var L = lightPosition.sub(point).normalize();
+    var L = lightPosition.sub(surfacePosition).normalize();
     var R = L.multiplyScalar(-1.0).reflect(normal);
-    var cameraPos = this.camera.position.clone();
-    var E = cameraPos.multiplyScalar(-1.0).normalize();
+
+    var E = surfacePosition.multiplyScalar(-1.0).normalize();
 
     var attenuation = this.computeAttenuation(this.lights[lightIndex]);
 
