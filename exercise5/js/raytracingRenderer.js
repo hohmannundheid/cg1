@@ -191,23 +191,51 @@ RaytracingRenderer.prototype.phong = function(normal, point, lightIndex, interse
 
 RaytracingRenderer.prototype.computeNormal = function(intersectedObject, face)
 {
-    var vert1 = new THREE.Vector3();
-    var vert2 = new THREE.Vector3();
-    var vert3 = new THREE.Vector3();
-    vert1.copy(intersectedObject.object.geometry.vertices[face.a]);
-    vert2.copy(intersectedObject.object.geometry.vertices[face.b]);
-    vert3.copy(intersectedObject.object.geometry.vertices[face.c]);
+    var inverseMatrix = new THREE.Matrix4();
+    inverseMatrix.getInverse(intersectedObject.object.matrixWorld);
+    var intersectionPoint = intersectedObject.point.clone();
+    intersectionPoint.applyMatrix4(inverseMatrix);
 
-    var U = new THREE.Vector3();
-    U = vert2.sub(vert1);
-    var V = new THREE.Vector3();
-    V = vert3.sub(vert1);
+    // Grab point coordinates from face
+    var p1 = intersectedObject.object.geometry.vertices[face.a].clone();
+    var p2 = intersectedObject.object.geometry.vertices[face.b].clone();
+    var p3 = intersectedObject.object.geometry.vertices[face.c].clone();
 
+    // Calculate the vertices
+    var v1 = p1.sub(p2);
+    var v2 = p3.sub(p2);
+    var v3 = intersectionPoint.sub(p2);
+
+    // Find the dot products
+    var dot00 = v1.dot(v1);
+    var dot01 = v1.dot(v2);
+    var dot11 = v2.dot(v2);
+
+    // Calculate the denominator
+    var denom = (dot00 * dot11) - (dot01 * dot01);
+
+    // Calculate Barycentric weights
+    var dot20 = v3.dot(v1);
+    var dot21 = v3.dot(v2);
+    var bary1 = (dot11 * dot20 - dot01 * dot21) / denom;
+    var bary2 = (dot00 * dot21 - dot01 * dot20) / denom;
+    var bary3 = 1.0 - bary1 - bary2;
+
+    // Multiply weights with vertex normals
+    var v1Normal = face.vertexNormals[0].clone();
+    v1Normal.multiplyScalar(bary1);
+    var v2Normal = face.vertexNormals[1].clone();
+    v2Normal.multiplyScalar(bary2);
+    var v3Normal = face.vertexNormals[2].clone();
+    v3Normal.multiplyScalar(bary3);
+
+    // Form interpolated normal
     var N = new THREE.Vector3();
-    N.x = (U.y * V.z) - (U.z * V.y);
-    N.y = (U.z * V.x) - (U.x * V.z);
-    N.z = (U.x * V.y) - (U.y * V.x);
+    N.add(v1Normal);
+    N.add(v2Normal);
+    N.add(v3Normal);
 
+    // Transform N to world coordinates
     var normalMatrix = new THREE.Matrix3();
     normalMatrix.getNormalMatrix(intersectedObject.object.matrixWorld);
     N.applyMatrix3(normalMatrix).normalize();
