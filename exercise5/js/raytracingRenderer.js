@@ -103,8 +103,8 @@ RaytracingRenderer.prototype.render = function ()
 			} else
 			{
 				//TODO for ex5#
-                for (var i = 0; i < samplingRate; i++) {
-                    pixelColor += this.renderPixel(x, y, cameraPosition, cameraNormalMatrix, perspective);
+                for (var i = 0; i < this.superSamplingRate; i++) {
+                    pixelColor.add(this.renderPixel(x, y, cameraPosition, cameraNormalMatrix, perspective));
                 }
 			}
             imageData.data[indexRunner] = pixelColor.r * 255.0;
@@ -167,29 +167,22 @@ RaytracingRenderer.prototype.spawnRay = function(origin, direction, pixelColor, 
 }
 
 RaytracingRenderer.prototype.phong = function(normal, point, lightIndex, intersectedObject) {
-    var N = normal.normalize();
-    var lightPos = new THREE.Vector3();
-    lightPos.copy(this.lights[0].position);
-    //var attenuation = 1.0 / (Math.pow(lightPos.length(), 2));
-    var L = lightPos.sub(point).normalize();
-    var R = L.multiplyScalar(-1.0).reflect(N);
-    var E = this.camera.position.multiplyScalar(-1.0).normalize();
+    var lightPosition = this.lights[lightIndex].position.clone();
+    var L = lightPosition.sub(point).normalize();
+    var R = L.multiplyScalar(-1.0).reflect(normal);
+    var cameraPos = this.camera.position.clone();
+    var E = cameraPos.multiplyScalar(-1.0).normalize();
 
-    var materialColor = new THREE.Color(0, 0, 0);
-    materialColor.copy(intersectedObject.material.color);
+    var attenuation = this.computeAttenuation(this.lights[lightIndex]);
 
-    var diffuseFactor = Math.max(N.dot(L), 0.0);
+    var materialColor = intersectedObject.material.color.clone();
+    var diffuseFactor = Math.max(normal.dot(L), 0.0);
     var diffuseColor = materialColor.multiplyScalar(diffuseFactor);
 
-    var specularColor = new THREE.Color(0, 0, 0);
-    specularColor.copy(intersectedObject.material.specular);
+    var specularColor = intersectedObject.material.specular.clone();
     specularColor = specularColor.multiplyScalar(Math.pow(Math.max(R.dot(E), 0.0), intersectedObject.material.shininess));
 
-    var finalColor = new THREE.Color(0, 0, 0);
-    finalColor.add(diffuseColor);
-    finalColor.add(specularColor);
-
-    return finalColor;
+    return diffuseColor.add(specularColor);
 }
 
 RaytracingRenderer.prototype.computeNormal = function(intersectedObject, face)
@@ -211,5 +204,13 @@ RaytracingRenderer.prototype.computeNormal = function(intersectedObject, face)
     N.y = (U.z * V.x) - (U.x * V.z);
     N.z = (U.x * V.y) - (U.y * V.x);
 
+    var normalMatrix = new THREE.Matrix3();
+    normalMatrix.getNormalMatrix(intersectedObject.object.matrixWorld);
+    N.applyMatrix3(normalMatrix).normalize();
+
     return N;
 };
+
+RaytracingRenderer.prototype.computeAttenuation = function(light) {
+    return (1.0 / (1.0 + light.intensity * Math.pow(light.position.length(), 2)));
+}

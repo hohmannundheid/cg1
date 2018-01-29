@@ -130,7 +130,8 @@ SceneController.prototype.setupGeometry = function()
 
           var torusGeometry = new THREE.TorusGeometry(100, 20, 16, 100);
           var planeGeometry = new THREE.BoxGeometry(600, 5, 600);
-          var boxGeometry = new THREE.CylinderGeometry(100, 100, 100, 32);
+          var cylinderGeometry = new THREE.CylinderGeometry(100, 100, 64, 64);
+          var sphereGeometry = new THREE.SphereGeometry( 100, 32, 32 );
 
           var torus = new THREE.Mesh( torusGeometry, phongMaterialBlue );
           torus.scale.multiplyScalar( 0.5 );
@@ -142,16 +143,15 @@ SceneController.prototype.setupGeometry = function()
           torus2.position.set( 175, - 250 + 5, - 150 );
           group.add(torus2);
 
-          var torus3 = new THREE.Mesh( torusGeometry, phongMaterialGreen );
-          torus3.scale.multiplyScalar( 0.5 );
-          torus3.position.set( 75, - 250 + 5, - 75 );
-          torus3.rotation.y = 0.5;
-          this.scene.add( torus3 );
+          var sphere = new THREE.Mesh( sphereGeometry, phongMaterialGreen );
+          sphere.scale.multiplyScalar( 0.5 );
+          sphere.position.set( 75, - 250 + 5, - 75 );
+          group.add( sphere );
 
-          var box = new THREE.Mesh( boxGeometry, mirrorMaterialSmooth );
-          box.position.set( - 175, - 250 + 2.5, - 150 );
-          box.rotation.y = 0.5;
-          group.add(box);
+          var cylinder = new THREE.Mesh( cylinderGeometry, mirrorMaterialSmooth );
+          cylinder.position.set( - 175, - 250 + 2.5, - 150 );
+          cylinder.rotation.y = 0.5;
+          group.add(cylinder);
 
           this.scene.add(group);
 
@@ -191,6 +191,7 @@ SceneController.prototype.setupLight = function()
     light.position.set( 0, 0, 300 );
     light.physicalAttenuation = true;
     this.scene.add( light );
+
     var light = new THREE.PointLight( 0xffaa55, intensity );
     light.position.set( - 200, 100, 100 );
     light.physicalAttenuation = true;
