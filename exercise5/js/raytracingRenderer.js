@@ -154,11 +154,11 @@ RaytracingRenderer.prototype.spawnRay = function(origin, direction, pixelColor, 
         var normal = this.computeNormal(intersects[0], intersects[0].face);
         if (this.allLights) {
             for (var lightIndex = 0; lightIndex < this.lights.length; lightIndex++) {
-                var phong = this.phong(normal, intersects[0].point, lightIndex, intersects[0].object);
+                var phong = this.phong(origin, normal, intersects[0].point, lightIndex, intersects[0].object);
                 pixelColor.add(phong);
             }
         } else {
-            var phong = this.phong(normal, intersects[0].point, 0, intersects[0].object);
+            var phong = this.phong(origin, normal, intersects[0].point, 0, intersects[0].object);
             pixelColor.add(phong);
         }
     }
@@ -166,25 +166,38 @@ RaytracingRenderer.prototype.spawnRay = function(origin, direction, pixelColor, 
     //if material is mirror and with maxRecursionDepthrecursion, spawnRay again
 }
 
-RaytracingRenderer.prototype.phong = function(normal, point, lightIndex, intersectedObject) {
+RaytracingRenderer.prototype.phong = function(origin, normal, point, lightIndex, intersectedObject) {
+    var originPosition = origin.clone();
     var surfacePosition = point.clone();
-    var modelViewMatrix = intersectedObject.modelViewMatrix.clone();
-    surfacePosition = surfacePosition.applyMatrix4(modelViewMatrix);
-
     var lightPosition = this.lights[lightIndex].position.clone();
+
+    // Transforming intersection point and origin vector into camera world space
+    var cameraWorldMatrix = this.camera.matrixWorld.clone();
+    originPosition.applyMatrix4(cameraWorldMatrix);
+    surfacePosition.applyMatrix4(cameraWorldMatrix);
+    lightPosition.applyMatrix4(cameraWorldMatrix);
+
+    // Subtracting origin (camera) position from intersection point
+    surfacePosition.sub(originPosition);
+
+    // Components for phong shading
     var L = lightPosition.sub(surfacePosition).normalize();
     var R = L.multiplyScalar(-1.0).reflect(normal);
-
     var E = surfacePosition.multiplyScalar(-1.0).normalize();
 
+    // Compute light attenuation (fall-off)
     var attenuation = this.computeAttenuation(this.lights[lightIndex]);
+    var intensity = this.lights[lightIndex].intensity;
 
+    // Calculate diffuse component
     var materialColor = intersectedObject.material.color.clone();
-    var diffuseFactor = Math.max(normal.dot(L), 0.0);
+    var diffuseFactor = Math.max(normal.dot(L), 0.0) * attenuation * intensity;
     var diffuseColor = materialColor.multiplyScalar(diffuseFactor);
 
+    // Calculate specular component
     var specularColor = intersectedObject.material.specular.clone();
-    specularColor = specularColor.multiplyScalar(Math.pow(Math.max(R.dot(E), 0.0), intersectedObject.material.shininess));
+    var specularFactor = Math.pow(Math.max(R.dot(E), 0.0), intersectedObject.material.shininess) * attenuation * intensity;
+    specularColor.multiplyScalar(specularFactor);
 
     return diffuseColor.add(specularColor);
 }
@@ -244,5 +257,5 @@ RaytracingRenderer.prototype.computeNormal = function(intersectedObject, face)
 };
 
 RaytracingRenderer.prototype.computeAttenuation = function(light) {
-    return (1.0 / (1.0 + light.intensity * Math.pow(light.position.length(), 2)));
+    return 1.0 / Math.pow(light.position.length(), 2);
 }
