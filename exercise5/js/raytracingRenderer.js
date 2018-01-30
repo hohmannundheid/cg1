@@ -157,22 +157,19 @@ RaytracingRenderer.prototype.spawnRay = function(origin, direction, pixelColor, 
 
         // calculate phong model for each intersection point
         var normal = this.computeNormal(intersects[0], intersects[0].face);
-        if (this.allLights) {
-            for (var lightIndex = 0; lightIndex < this.lights.length; lightIndex++) {
-                var phong = this.phong(origin, normal, intersects[0].point, lightIndex, intersects[0].object);
-                pixelColor.add(phong);
-                this.clamp(pixelColor, 0.0, 1.0);
-            }
-        } else {
-            raycaster.set(intersects[0].point, this.lights[0].position);
-            var shadow = raycaster.intersectObjects(this.scene.children, true);
-            if (shadow.length > 0) {
-                debugger;
-            }
+        var lightSources = this.allLights ? this.lights.length : 1;
+        for (var lightIndex = 0; lightIndex < lightSources; lightIndex++) {
+            var light = this.lights[lightIndex].clone();
+            var lightDirection = light.position.sub(intersects[0].point).normalize();
+            raycaster.set(intersects[0].point, lightDirection);
 
-            var phong = this.phong(origin, normal, intersects[0].point, 0, intersects[0].object);
-            pixelColor.add(phong);
-            this.clamp(pixelColor, 0.0, 1.0);
+            var shadowIntersections = raycaster.intersectObjects(this.scene.children, true);
+            if (shadowIntersections.length == 0) {
+                // No intersections made. Calculate phong model
+                var phong = this.phong(origin, normal, intersects[0].point, this.lights[lightIndex], intersects[0].object);
+                pixelColor.add(phong);
+                this.clamp(pixelColor, 0, 1);
+            }
         }
 
         //if material is mirror and with maxRecursionDepth, spawnRay again
@@ -181,29 +178,22 @@ RaytracingRenderer.prototype.spawnRay = function(origin, direction, pixelColor, 
             var originCopy = origin.clone();
             var surfacePoint = intersects[0].point.clone();
             originCopy.sub(surfacePoint);
-            var reflectedRay = originCopy.reflect(normal).multiplyScalar(-1.0).clone();
+            var reflectedRay = originCopy.reflect(normal).multiplyScalar(-1).clone();
             this.spawnRay(intersects[0].point, reflectedRay, pixelColor, recursionDepth + 1);
         }
     }
 }
 
-RaytracingRenderer.prototype.phong = function(origin, normal, point, lightIndex, intersectedObject) {
+RaytracingRenderer.prototype.phong = function(origin, normal, point, light, intersectedObject) {
     var originPosition = origin.clone();
     var surfacePosition = point.clone();
-    var lightPosition = this.lights[lightIndex].position.clone();
+    var lightPosition = light.position.clone();
 
     // Components for phong shading
     var L = lightPosition.sub(surfacePosition);
 
-    var raycaster = new THREE.Raycaster();
-    raycaster.set(point, L);
-    if (raycaster.intersectObjects(this.scene.children, true).length > 0) {
-        // Ray is blocked so we return black color
-        return new THREE.Color(0, 0, 0);
-    }
-
     // Compute light attenuation (fall-off)
-    var intensity = this.lights[lightIndex].intensity;
+    var intensity = light.intensity;
     var attenuation = this.computeAttenuation(L) * intensity;
 
     // Normalize light vector after calculating attenuation
@@ -218,7 +208,7 @@ RaytracingRenderer.prototype.phong = function(origin, normal, point, lightIndex,
     var diffuseColor = materialColor.multiplyScalar(diffuseFactor);
 
     // Calculate specular component
-    var specularColor = this.lights[lightIndex].color.clone();
+    var specularColor = light.color.clone();
     var specularFactor = Math.pow(Math.max(R.dot(E), 0), intersectedObject.material.shininess) * attenuation;
     specularColor.multiplyScalar(specularFactor);
 
