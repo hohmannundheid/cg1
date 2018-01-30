@@ -168,7 +168,6 @@ RaytracingRenderer.prototype.spawnRay = function(origin, direction, pixelColor, 
                 // No intersections made. Calculate phong model
                 var phong = this.phong(origin, normal, intersects[0].point, this.lights[lightIndex], intersects[0].object);
                 pixelColor.add(phong);
-                this.clamp(pixelColor, 0, 1);
             }
         }
 
@@ -178,7 +177,7 @@ RaytracingRenderer.prototype.spawnRay = function(origin, direction, pixelColor, 
             var originCopy = origin.clone();
             var surfacePoint = intersects[0].point.clone();
             originCopy.sub(surfacePoint);
-            var reflectedRay = originCopy.reflect(normal).multiplyScalar(-1).clone();
+            var reflectedRay = originCopy.reflect(normal).multiplyScalar(-1).normalize();
             this.spawnRay(intersects[0].point, reflectedRay, pixelColor, recursionDepth + 1);
         }
     }
