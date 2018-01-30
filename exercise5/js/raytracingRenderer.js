@@ -171,23 +171,22 @@ RaytracingRenderer.prototype.phong = function(origin, normal, point, lightIndex,
     var surfacePosition = point.clone();
     var lightPosition = this.lights[lightIndex].position.clone();
 
-    // Transforming intersection point and origin vector into camera world space
+    // Transforming light vector into camera world space
     var cameraWorldMatrix = this.camera.matrixWorld.clone();
-    originPosition.applyMatrix4(cameraWorldMatrix);
-    surfacePosition.applyMatrix4(cameraWorldMatrix);
     lightPosition.applyMatrix4(cameraWorldMatrix);
 
-    // Subtracting origin (camera) position from intersection point
-    surfacePosition.sub(originPosition);
-
     // Components for phong shading
-    var L = lightPosition.sub(surfacePosition).normalize();
-    var R = L.multiplyScalar(-1.0).reflect(normal);
-    var E = surfacePosition.multiplyScalar(-1.0).normalize();
+    var L = lightPosition.sub(surfacePosition);
 
     // Compute light attenuation (fall-off)
     var intensity = this.lights[lightIndex].intensity;
-    var attenuation = this.computeAttenuation(this.lights[lightIndex]) * intensity;
+    var attenuation = this.computeAttenuation(L) * intensity;
+
+    // Normalize light vector after calculating attenuation
+    L.normalize();
+
+    var R = L.reflect(normal).multiplyScalar(-1.0);
+    var E = originPosition.sub(surfacePosition).normalize();
 
     // Calculate diffuse component
     var materialColor = intersectedObject.material.color.clone();
@@ -195,7 +194,7 @@ RaytracingRenderer.prototype.phong = function(origin, normal, point, lightIndex,
     var diffuseColor = materialColor.multiplyScalar(diffuseFactor);
 
     // Calculate specular component
-    var specularColor = intersectedObject.material.specular.clone();
+    var specularColor = this.lights[lightIndex].color.clone();
     var specularFactor = Math.pow(Math.max(R.dot(E), 0.0), intersectedObject.material.shininess) * attenuation;
     specularColor.multiplyScalar(specularFactor);
 
@@ -238,9 +237,9 @@ RaytracingRenderer.prototype.computeNormal = function(intersectedObject, face)
     var v1Normal = face.vertexNormals[0].clone();
     v1Normal.multiplyScalar(bary1);
     var v2Normal = face.vertexNormals[1].clone();
-    v2Normal.multiplyScalar(bary2);
+    v2Normal.multiplyScalar(bary3);
     var v3Normal = face.vertexNormals[2].clone();
-    v3Normal.multiplyScalar(bary3);
+    v3Normal.multiplyScalar(bary2);
 
     // Form interpolated normal
     var N = new THREE.Vector3();
@@ -257,5 +256,5 @@ RaytracingRenderer.prototype.computeNormal = function(intersectedObject, face)
 };
 
 RaytracingRenderer.prototype.computeAttenuation = function(light) {
-    return 1.0 / Math.pow(light.position.length(), 2);
+    return 1.0 / Math.pow(light.length(), 2);
 }
