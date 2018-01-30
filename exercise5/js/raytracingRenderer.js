@@ -150,19 +150,32 @@ RaytracingRenderer.prototype.spawnRay = function(origin, direction, pixelColor, 
     var intersects = raycaster.intersectObjects(this.scene.children, true);
     //if intersections, compute color (this is the main part of the exercise)
     if (intersects.length > 0) {
+        if (!this.calcDiffuse && !this.calcPhong) {
+            pixelColor.add(intersects[0].object.material.color);
+            return pixelColor;
+        }
+
         // calculate phong model for each intersection point
         var normal = this.computeNormal(intersects[0], intersects[0].face);
         if (this.allLights) {
             for (var lightIndex = 0; lightIndex < this.lights.length; lightIndex++) {
                 var phong = this.phong(origin, normal, intersects[0].point, lightIndex, intersects[0].object);
                 pixelColor.add(phong);
+                this.clamp(pixelColor, 0.0, 1.0);
             }
         } else {
+            raycaster.set(intersects[0].point, this.lights[0].position);
+            var shadow = raycaster.intersectObjects(this.scene.children, true);
+            if (shadow.length > 0) {
+                debugger;
+            }
+
             var phong = this.phong(origin, normal, intersects[0].point, 0, intersects[0].object);
             pixelColor.add(phong);
+            this.clamp(pixelColor, 0.0, 1.0);
         }
 
-        //if material is mirror and with maxRecursionDepthrecursion, spawnRay again
+        //if material is mirror and with maxRecursionDepth, spawnRay again
         if (intersects[0].object.material.mirror && recursionDepth < this.maxRecursionDepth) {
             // Calculate reflection
             var originCopy = origin.clone();
@@ -179,12 +192,15 @@ RaytracingRenderer.prototype.phong = function(origin, normal, point, lightIndex,
     var surfacePosition = point.clone();
     var lightPosition = this.lights[lightIndex].position.clone();
 
-    // Transforming light vector into camera world space
-    var cameraWorldMatrix = this.camera.matrixWorld.clone();
-    lightPosition.applyMatrix4(cameraWorldMatrix);
-
     // Components for phong shading
     var L = lightPosition.sub(surfacePosition);
+
+    var raycaster = new THREE.Raycaster();
+    raycaster.set(point, L);
+    if (raycaster.intersectObjects(this.scene.children, true).length > 0) {
+        // Ray is blocked so we return black color
+        return new THREE.Color(0, 0, 0);
+    }
 
     // Compute light attenuation (fall-off)
     var intensity = this.lights[lightIndex].intensity;
@@ -193,17 +209,17 @@ RaytracingRenderer.prototype.phong = function(origin, normal, point, lightIndex,
     // Normalize light vector after calculating attenuation
     L.normalize();
 
-    var R = L.reflect(normal).multiplyScalar(-1.0);
+    var R = L.reflect(normal).multiplyScalar(-1);
     var E = originPosition.sub(surfacePosition).normalize();
 
     // Calculate diffuse component
     var materialColor = intersectedObject.material.color.clone();
-    var diffuseFactor = Math.max(normal.dot(L), 0.0) * attenuation;
+    var diffuseFactor = Math.max(L.dot(normal), 0) * attenuation;
     var diffuseColor = materialColor.multiplyScalar(diffuseFactor);
 
     // Calculate specular component
     var specularColor = this.lights[lightIndex].color.clone();
-    var specularFactor = Math.pow(Math.max(R.dot(E), 0.0), intersectedObject.material.shininess) * attenuation;
+    var specularFactor = Math.pow(Math.max(R.dot(E), 0), intersectedObject.material.shininess) * attenuation;
     specularColor.multiplyScalar(specularFactor);
 
     return diffuseColor.add(specularColor);
@@ -239,7 +255,7 @@ RaytracingRenderer.prototype.computeNormal = function(intersectedObject, face)
     var dot21 = v3.dot(v2);
     var bary1 = (dot11 * dot20 - dot01 * dot21) / denom;
     var bary2 = (dot00 * dot21 - dot01 * dot20) / denom;
-    var bary3 = 1.0 - bary1 - bary2;
+    var bary3 = 1 - bary1 - bary2;
 
     // Multiply weights with vertex normals
     var v1Normal = face.vertexNormals[0].clone();
@@ -264,5 +280,13 @@ RaytracingRenderer.prototype.computeNormal = function(intersectedObject, face)
 };
 
 RaytracingRenderer.prototype.computeAttenuation = function(light) {
-    return 1.0 / Math.pow(light.length(), 2);
+    return 1 / Math.pow(light.length(), 2);
+}
+
+RaytracingRenderer.prototype.clamp = function(pixelColor, min, max) {
+    pixelColor.r = Math.min(Math.max(min, pixelColor.r), max);
+    pixelColor.g = Math.min(Math.max(min, pixelColor.g), max);
+    pixelColor.b = Math.min(Math.max(min, pixelColor.b), max);
+
+    return pixelColor;
 }
