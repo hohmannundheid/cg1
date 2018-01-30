@@ -136,6 +136,7 @@ SceneController.prototype.setupGeometry = function()
           var torus = new THREE.Mesh( torusGeometry, phongMaterialBlue );
           torus.scale.multiplyScalar( 0.5 );
           torus.position.set( - 50, - 250 + 5, - 50 );
+          torus.rotation.y = 0.5;
           group.add(torus);
 
           var torus2 = new THREE.Mesh( torusGeometry, phongMaterialRed );
@@ -150,7 +151,6 @@ SceneController.prototype.setupGeometry = function()
 
           var cylinder = new THREE.Mesh( cylinderGeometry, mirrorMaterialSmooth );
           cylinder.position.set( - 175, - 250 + 2.5, - 150 );
-          cylinder.rotation.y = 0.5;
           group.add(cylinder);
 
           this.scene.add(group);
