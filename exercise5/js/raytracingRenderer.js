@@ -161,9 +161,17 @@ RaytracingRenderer.prototype.spawnRay = function(origin, direction, pixelColor, 
             var phong = this.phong(origin, normal, intersects[0].point, 0, intersects[0].object);
             pixelColor.add(phong);
         }
-    }
 
-    //if material is mirror and with maxRecursionDepthrecursion, spawnRay again
+        //if material is mirror and with maxRecursionDepthrecursion, spawnRay again
+        if (intersects[0].object.material.mirror && recursionDepth < this.maxRecursionDepth) {
+            // Calculate reflection
+            var originCopy = origin.clone();
+            var surfacePoint = intersects[0].point.clone();
+            originCopy.sub(surfacePoint);
+            var reflectedRay = originCopy.reflect(normal).multiplyScalar(-1.0).clone();
+            this.spawnRay(intersects[0].point, reflectedRay, pixelColor, recursionDepth + 1);
+        }
+    }
 }
 
 RaytracingRenderer.prototype.phong = function(origin, normal, point, lightIndex, intersectedObject) {
