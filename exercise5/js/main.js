@@ -1,4 +1,3 @@
-
 /*
  * This is main.js which is referenced directly from within
  * a <script> node in index.html
@@ -13,12 +12,12 @@
 
 function main() {
 
-  var sceneController = new SceneController(document);
-  sceneController.setup();
+    var sceneController = new SceneController(document);
+    sceneController.setup();
 
-  var htmlController = new HtmlController(sceneController);
-  htmlController.setup();
+    var htmlController = new HtmlController(sceneController);
+    htmlController.setup();
 
     //this is how you output to the debugger console
-  window.console.log("end main method");
+    window.console.log("end main method");
 }
