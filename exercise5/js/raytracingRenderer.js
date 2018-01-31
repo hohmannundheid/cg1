@@ -122,6 +122,18 @@ RaytracingRenderer.prototype.render = function ()
     this.rendering = false;
 }
 
+/*
+ * My attempt at trying to implement supersampling. There are a few problems with this implementation which I was not able
+ * to solve. Perhaps there is room for some partial credit here if I explain my thought process a bit :)
+ * 1. I was unsure of how to average the color values. The way I had imagined it was I would just add the four sampled values
+ *    and then average the individual RGB values of the final color, but that was too inconsistent and gave me improper values
+ * 2. Finding a good thresholding value to decide when to subsample. I tried to just set an upper threshold and decided to
+ *    subsample the RGB values of my samples' color values were above that compared to the center sample, but that did not
+ *    give proper results.
+ * 3. Subdividing properly. My current implementation simply divides the x and y in half to make a smaller grid, but
+ *    that does create a proper subspace since the grid becomes too small too quickly. Another approach would have
+ *    been better here I am sure.
+ */
 RaytracingRenderer.prototype.superSample = function(x, y, cameraPosition, cameraNormalMatrix, perspective, samplingRate) {
     var pixelColor = new THREE.Color();
 
@@ -141,19 +153,46 @@ RaytracingRenderer.prototype.superSample = function(x, y, cameraPosition, camera
     centerColor.add(pixelColor.add(this.renderPixel(x, y, cameraPosition, cameraNormalMatrix, perspective)));
 
     if (this.aboveThreshold() && samplingRate < this.superSamplingRate) {
+        // The threshold stepped over so we would need to subsample again
         this.superSample(Math.floor(x / 2), Math.floor(y / 2), cameraPosition, cameraNormalMatrix, perspective, samplingRate + 1);
     } else {
         pixelColor.add(topLeftColor).add(topRightColor).add(bottomLeftColor).add(bottomRightColor);
 
-        pixelColor.r = pixelColor / 4;
-        pixelColor.g = pixelColor / 4;
-        pixelColor.b = pixelColor / 4;
+        // We took four samples to I figured the final color would be the average of them
+        pixelColor.r = pixelColor.r / 4;
+        pixelColor.g = pixelColor.g / 4;
+        pixelColor.b = pixelColor.b / 4;
     }
 
 }
 
-RaytracingRenderer.prototype.aboveThreshold = function() {
-    return false;
+// My simple thresholding function for color values
+RaytracingRenderer.prototype.aboveThreshold = function(sample1, sample2, sample3, sample4, center) {
+    var color1 = sample1.clone();
+    var color2 = sample2.clone();
+    var color3 = sample3.clone();
+    var color4 = sample4.clone();
+
+    color1.add(center);
+    if (Math.max(color1.r, 0.9) > 0.9 || Math.max(color1.g, 0.9) > 0.9 || Math.max(color1.b, 0.9) > 0.9) {
+        return false;
+    }
+
+    color2.add(center);
+    if (Math.max(color2.r, 0.9) > 0.9 || Math.max(color2.g, 0.9) > 0.9 || Math.max(color2.b, 0.9) > 0.9) {
+        return false;
+    }
+
+    color3.add(center);
+    if (Math.max(color3.r, 0.9) > 0.9 || Math.max(color3.g, 0.9) > 0.9 || Math.max(color3.b, 0.9) > 0.9) {
+        return false;
+    }
+
+    color4.add(center);
+    if (Math.max(color4.r, 0.9) > 0.9 || Math.max(color4.g, 0.9) > 0.9 || Math.max(color4.b, 0.9) > 0.9) {
+        return false;
+    }
+    return true;
 }
 
 RaytracingRenderer.prototype.renderPixel = function(x, y, cameraPosition, cameraNormalMatrix, perspective)
@@ -179,6 +218,11 @@ RaytracingRenderer.prototype.spawnRay = function(origin, direction, pixelColor, 
     var raycaster = new THREE.Raycaster();
     raycaster.set(origin, direction);
 
+    // This was supposed to be the point where I swap in my custom
+    // raytracer for my bounding box checks. Unfortunately, I did not
+    // quite finish it but perhaps there is a chance for partial credit :)
+    // The work for my ray tracer can be found in the 'customRaytracer.js' file
+    //
     //var raycaster = new CustomRayTracer();
     //raycaster.set(origin, direction);
     //var intersects = raycaster.intersectObjects(this.scene.children);
