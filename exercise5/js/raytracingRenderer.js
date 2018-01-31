@@ -147,6 +147,10 @@ RaytracingRenderer.prototype.spawnRay = function(origin, direction, pixelColor, 
     var raycaster = new THREE.Raycaster();
     raycaster.set(origin, direction);
 
+    //var test = new CustomRayTracer();
+    //test.set(origin, direction);
+    //var intersectTest = test.intersectObjects(this.scene.children);
+
     var intersects = raycaster.intersectObjects(this.scene.children, true);
     //if intersections, compute color (this is the main part of the exercise)
     if (intersects.length > 0) {
@@ -269,5 +273,6 @@ RaytracingRenderer.prototype.computeNormal = function(intersectedObject, face)
 };
 
 RaytracingRenderer.prototype.computeAttenuation = function(light) {
-    return 1 / Math.pow(light.length(), 2);
+    var length = light.length();
+    return 1 / (length * length);
 }

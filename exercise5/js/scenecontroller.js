@@ -125,62 +125,106 @@ SceneController.prototype.setupGeometry = function()
     mirrorMaterialSmooth.mirror = true;
     mirrorMaterialSmooth.reflectivity = 0.3;
 
-    var group = new THREE.Group();
-
     var torusGeometry = new THREE.TorusGeometry(100, 20, 16, 100);
     var planeGeometry = new THREE.BoxGeometry(600, 5, 600);
-    var cylinderGeometry = new THREE.CylinderGeometry(100, 100, 64, 64);
+    var cylinderGeometry = new THREE.CylinderGeometry(60, 60, 100, 64);
     var sphereGeometry = new THREE.SphereGeometry( 100, 32, 32 );
 
     var torus = new THREE.Mesh( torusGeometry, phongMaterialBlue );
     torus.scale.multiplyScalar( 0.5 );
-    torus.position.set( - 50, - 250 + 5, - 50 );
+    torus.position.set( - 50, -250 + 5, -50 );
     torus.rotation.y = 0.5;
-    group.add(torus);
+
+    var boundingBox = new THREE.BoxGeometry(100, 120, 90);
+    var boundingBoxMesh = new THREE.Mesh(boundingBox, phongMaterialRed);
+    boundingBoxMesh.position.set( - 50, -250 + 5, -50 );
+    torus.boundingBox = boundingBoxMesh;
+    this.scene.add(torus);
 
     var torus2 = new THREE.Mesh( torusGeometry, phongMaterialRed );
     torus2.scale.multiplyScalar( 0.5 );
-    torus2.position.set( 175, - 250 + 5, - 150 );
-    group.add(torus2);
+    torus2.position.set( 175, -250 + 5, -150 );
+
+    boundingBox = new THREE.BoxGeometry(120, 120, 90);
+    boundingBoxMesh = new THREE.Mesh(boundingBox, phongMaterialRed);
+    boundingBoxMesh.position.set( 175, -250 + 5, -150 );
+    torus2.boundingBox = boundingBoxMesh;
+    this.scene.add(torus2);
 
     var sphere = new THREE.Mesh( sphereGeometry, phongMaterialGreen );
     sphere.scale.multiplyScalar( 0.5 );
-    sphere.position.set( 75, - 250 + 5, - 75 );
-    group.add( sphere );
+    sphere.position.set( 60, -250 + 5, -75);
+
+    boundingBox = new THREE.BoxGeometry(100, 100, 100);
+    boundingBoxMesh = new THREE.Mesh(boundingBox, phongMaterialGreen);
+    boundingBoxMesh.position.set(60, -250 + 5, -75);
+    sphere.boundingBox = boundingBoxMesh;
+    this.scene.add(sphere);
 
     var cylinder = new THREE.Mesh( cylinderGeometry, mirrorMaterialSmooth );
-    cylinder.position.set( - 175, - 250 + 2.5, - 150 );
-    group.add(cylinder);
+    cylinder.position.set( -175, -250 + 2.5, -150 );
 
-    this.scene.add(group);
+    boundingBox = new THREE.BoxGeometry(120, 120, 120);
+    boundingBoxMesh = new THREE.Mesh(boundingBox, phongMaterialGreen);
+    boundingBoxMesh.position.set(-175, -250 + 2.5, -150);
+    sphere.boundingBox = boundingBoxMesh;
+    this.scene.add(cylinder);
 
     // bottom
     var plane = new THREE.Mesh( planeGeometry, phongMaterialBoxBottom );
     plane.position.set( 0, - 300 + 2.5, - 300 );
-    this.scene.add( plane );
+
+    boundingBox = new THREE.BoxGeometry(600, 5, 600);
+    boundingBoxMesh = new THREE.Mesh(boundingBox, phongMaterialGreen);
+    boundingBoxMesh.position.set(0, -295, -300);
+    plane.boundingBox = boundingBoxMesh;
+    this.scene.add(plane);
 
     // top
-    var plane = new THREE.Mesh( planeGeometry, phongMaterialBox );
-    plane.position.set( 0, 300 - 2.5, - 300 );
-    this.scene.add( plane );
+    var plane1 = new THREE.Mesh( planeGeometry, phongMaterialBox );
+    plane1.position.set( 0, 300 - 2.5, - 300 );
+
+    boundingBox = new THREE.BoxGeometry(600, 5, 600);
+    boundingBoxMesh = new THREE.Mesh(boundingBox, phongMaterialGreen);
+    boundingBoxMesh.position.set(0, 295, -300);
+    plane1.boundingBox = boundingBoxMesh;
+    this.scene.add(plane1);
 
     // back
-    var plane = new THREE.Mesh( planeGeometry, mirrorMaterialSmooth );
-    plane.rotation.x = 1.57;
-    plane.position.set( 0, 0, - 300 );
-    this.scene.add( plane );
+    var plane2 = new THREE.Mesh( planeGeometry, mirrorMaterialSmooth );
+    plane2.rotation.x = 1.57;
+    plane2.position.set( 0, 0, - 300 );
+
+    boundingBox = new THREE.BoxGeometry(600, 5, 600);
+    boundingBoxMesh = new THREE.Mesh(boundingBox, phongMaterialGreen);
+    boundingBoxMesh.rotation.x = 1.57;
+    boundingBoxMesh.position.set(0, 0, -295);
+    plane2.boundingBox = boundingBoxMesh;
+    this.scene.add(plane2);
 
     // left
-    var plane = new THREE.Mesh( planeGeometry, phongMaterialBlue );
-    plane.rotation.z = 1.57;
-    plane.position.set( - 300, 0, - 300 );
-    this.scene.add( plane );
+    var plane3 = new THREE.Mesh( planeGeometry, phongMaterialBlue );
+    plane3.rotation.z = 1.57;
+    plane3.position.set( - 300, 0, - 300 );
+
+    boundingBox = new THREE.BoxGeometry(600, 5, 600);
+    boundingBoxMesh = new THREE.Mesh(boundingBox, phongMaterialGreen);
+    boundingBoxMesh.rotation.z = 1.57;
+    boundingBoxMesh.position.set(-295, 0, -300);
+    plane3.boundingBox = boundingBoxMesh;
+    this.scene.add(plane3);
 
     // right
-    var plane = new THREE.Mesh( planeGeometry, phongMaterialRed );
-    plane.rotation.z = 1.57;
-    plane.position.set( 300, 0, - 300 );
-    this.scene.add( plane );
+    var plane4 = new THREE.Mesh( planeGeometry, phongMaterialRed );
+    plane4.rotation.z = 1.57;
+    plane4.position.set( 300, 0, - 300 );
+
+    boundingBox = new THREE.BoxGeometry(600, 5, 600);
+    boundingBoxMesh = new THREE.Mesh(boundingBox, phongMaterialGreen);
+    boundingBoxMesh.rotation.z = 1.57;
+    boundingBoxMesh.position.set(295, 0, -300);
+    plane4.boundingBox = boundingBoxMesh;
+    this.scene.add(plane4);
 }
 
 SceneController.prototype.setupLight = function()
