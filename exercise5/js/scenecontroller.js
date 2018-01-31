@@ -167,7 +167,7 @@ SceneController.prototype.setupGeometry = function()
     boundingBox = new THREE.BoxGeometry(120, 120, 120);
     boundingBoxMesh = new THREE.Mesh(boundingBox, phongMaterialGreen);
     boundingBoxMesh.position.set(-175, -250 + 2.5, -150);
-    sphere.boundingBox = boundingBoxMesh;
+    cylinder.boundingBox = boundingBoxMesh;
     this.scene.add(cylinder);
 
     // bottom

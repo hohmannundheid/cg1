@@ -12,17 +12,21 @@ CustomRayTracer.prototype.intersectObjects = function(sceneObjects) {
     var intersectedObjects = [];
     for (var i = 0; i < sceneObjects.length; i++) {
         var object = sceneObjects[i];
-        if (object.type === "Mesh" &&
-            this.intersectsBoundingBox(this.origin, this.direction, object)) {
+        if (object.type === "Mesh" && this.intersectsBoundingBox(this.origin, this.direction, object.boundingBox)) {
             // If the bound box intersects with the bounding
             for (var j = 0; j < object.geometry.faces.length; j++) {
                 var face = object.geometry.faces[j];
                 if (this.intersectsTriangle(this.origin, this.direction, face, object)) {
-                    intersectObjects.push(object);
+                    var intersectedObject = new Object();
+                    intersectedObject.object = object;
+                    intersectedObject.point = object.pointOfIntersection;
+                    intersectedObject.face = object.intersectedFace;
+                    intersectedObjects.push(intersectedObject);
                 }
             }
         }
     }
+    return intersectedObjects;
 }
 
 /**
@@ -89,5 +93,7 @@ CustomRayTracer.prototype.intersectsTriangle = function(orig, dir, face, object)
         return false;
     }
 
+    object.pointOfIntersection = P.clone();
+    object.intersectedFace = face.clone();
     return true;
 }

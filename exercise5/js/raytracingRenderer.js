@@ -102,10 +102,8 @@ RaytracingRenderer.prototype.render = function ()
                 pixelColor = this.renderPixel(x, y, cameraPosition, cameraNormalMatrix, perspective);
             } else
             {
-                //TODO for ex5#
-                for (var i = 0; i < this.superSamplingRate; i++) {
-                    pixelColor.add(this.renderPixel(x, y, cameraPosition, cameraNormalMatrix, perspective));
-                }
+                pixelColor = this.superSample(x, y, cameraPosition, cameraNormalMatrix, perspective, 0);
+
             }
             imageData.data[indexRunner] = pixelColor.r * 255.0;
             imageData.data[indexRunner + 1] = pixelColor.g * 255.0;
@@ -122,6 +120,40 @@ RaytracingRenderer.prototype.render = function ()
     alert("Finished rendering in " + clock.elapsedTime + " seconds. Image " + this.canvasWidth + " w / " + this.canvasHeight + " h");
 
     this.rendering = false;
+}
+
+RaytracingRenderer.prototype.superSample = function(x, y, cameraPosition, cameraNormalMatrix, perspective, samplingRate) {
+    var pixelColor = new THREE.Color();
+
+    var topLeftColor = new THREE.Color();
+    topLeftColor.add(pixelColor.add(this.renderPixel(x - 1, y + 1, cameraPosition, cameraNormalMatrix, perspective)));
+
+    var topRightColor = new THREE.Color();
+    topRightColor.add(pixelColor.add(this.renderPixel(x + 1, y + 1, cameraPosition, cameraNormalMatrix, perspective)));
+
+    var bottomLeftColor = new THREE.Color();
+    bottomLeftColor.add(pixelColor.add(this.renderPixel(x - 1, y - 1, cameraPosition, cameraNormalMatrix, perspective)));
+
+    var bottomRightColor = new THREE.Color();
+    bottomLeftColor.add(pixelColor.add(this.renderPixel(x + 1, y - 1, cameraPosition, cameraNormalMatrix, perspective)));
+
+    var centerColor = new THREE.Color();
+    centerColor.add(pixelColor.add(this.renderPixel(x, y, cameraPosition, cameraNormalMatrix, perspective)));
+
+    if (this.aboveThreshold() && samplingRate < this.superSamplingRate) {
+        this.superSample(Math.floor(x / 2), Math.floor(y / 2), cameraPosition, cameraNormalMatrix, perspective, samplingRate + 1);
+    } else {
+        pixelColor.add(topLeftColor).add(topRightColor).add(bottomLeftColor).add(bottomRightColor);
+
+        pixelColor.r = pixelColor / 4;
+        pixelColor.g = pixelColor / 4;
+        pixelColor.b = pixelColor / 4;
+    }
+
+}
+
+RaytracingRenderer.prototype.aboveThreshold = function() {
+    return false;
 }
 
 RaytracingRenderer.prototype.renderPixel = function(x, y, cameraPosition, cameraNormalMatrix, perspective)
@@ -147,9 +179,9 @@ RaytracingRenderer.prototype.spawnRay = function(origin, direction, pixelColor, 
     var raycaster = new THREE.Raycaster();
     raycaster.set(origin, direction);
 
-    //var test = new CustomRayTracer();
-    //test.set(origin, direction);
-    //var intersectTest = test.intersectObjects(this.scene.children);
+    //var raycaster = new CustomRayTracer();
+    //raycaster.set(origin, direction);
+    //var intersects = raycaster.intersectObjects(this.scene.children);
 
     var intersects = raycaster.intersectObjects(this.scene.children, true);
     //if intersections, compute color (this is the main part of the exercise)
