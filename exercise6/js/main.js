@@ -12,11 +12,13 @@ function main() {
     document.body.appendChild(renderer.domElement);
 
     var effect;
+    var anaglyph = new THREE.AnaglyphEffect(renderer);
+    var stereoscopic = new THREE.StereoEffect(renderer);
     var setupEffect = function() {
         if (effect === undefined || params.effect === 'anaglyph') {
-            effect = new THREE.AnaglyphEffect(renderer);
+            effect = anaglyph;
         } else {
-            effect = new THREE.StereoEffect(renderer);
+            effect = stereoscopic;
         }
         effect.setSize(window.innerWidth, window.innerHeight);
     };
@@ -36,31 +38,42 @@ function main() {
     };
     setupGUI();
 
+    var spheres = [];
     var setupScene = function() {
         // Setup textures for environment mapping
-        var envTexture = new THREE.TextureLoader().load('textures/gallery.jpg');
-        envTexture.mapping = THREE.EquirectangularReflectionMapping;
-        envTexture.magFilter = THREE.LinearFilter;
-        envTexture.minFilter = THREE.LinearMipMapLinearFilter;
+        var loader = new THREE.TextureLoader();
+        loader.load('textures/indoor.jpg', function(texture) {
+            texture.mapping = THREE.EquirectangularReflectionMapping;
+            texture.magFilter = THREE.LinearFilter;
+            texture.minFilter = THREE.LinearMipMapLinearFilter;
 
-        var rectShader = THREE.ShaderLib['equirect'];
-        var material = new THREE.ShaderMaterial({
-            fragmentShader: rectShader.fragmentShader,
-            vertexShader: rectShader.vertexShader,
-            uniforms: rectShader.uniforms,
-            depthWrite: false,
-            side: THREE.BackSide
+            var rectShader = THREE.ShaderLib['equirect'];
+            var material = new THREE.ShaderMaterial({
+                fragmentShader: rectShader.fragmentShader,
+                vertexShader: rectShader.vertexShader,
+                uniforms: rectShader.uniforms,
+                depthWrite: false,
+                side: THREE.BackSide
+            });
+
+            material.uniforms['tEquirect'].value = texture;
+
+            var cube = new THREE.Mesh(new THREE.BoxBufferGeometry(100, 100, 100), material);
+            scene.add(cube);
+
+            var sphereGeom = new THREE.SphereBufferGeometry(0.6, 48, 24);
+            var sphereMaterial = new THREE.MeshBasicMaterial({envMap: texture});
+            for (var i = 0; i < 100; i++) {
+                var sphere = new THREE.Mesh(sphereGeom, sphereMaterial);
+                var test = Math.random();
+                sphere.position.x = Math.random() * 10 - 5;
+                sphere.position.y = Math.random() * 10 - 5;
+                sphere.position.z = Math.random() * 10 - 5;
+
+                scene.add(sphere);
+                spheres.push(sphere);
+            }
         });
-
-        material.uniforms['tEquirect'].value = envTexture;
-
-        var cubeMesh = new THREE.Mesh(new THREE.BoxBufferGeometry(100, 100, 100), material);
-        scene.add(cubeMesh);
-
-        var geometry = new THREE.SphereBufferGeometry(0.6, 48, 24);
-        var sphereMaterial = new THREE.MeshLambertMaterial({envMap: envTexture});
-        var sphere = new THREE.Mesh(geometry, sphereMaterial);
-        scene.add(sphere);
     };
     setupScene();
 
@@ -80,11 +93,21 @@ function main() {
     };
     setupControls();
 
+    window.onresize = function(event) {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        effect.setSize( window.innerWidth, window.innerHeight );
+    }
+
+    var render = function() {
+        effect.render(scene, camera);
+    };
+
     // Start animation loop
     var animate = function() {
         requestAnimationFrame(animate);
         controls.update();
-        effect.render(scene, camera);
+        render();
     };
     animate();
 }
