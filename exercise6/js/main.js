@@ -100,6 +100,14 @@ function main() {
     }
 
     var render = function() {
+        if (spheres.length > 0) {
+            var time = 0.0001 * Date.now();
+            for (var i = 0; i < spheres.length; i++) {
+                var sphere = spheres[i];
+                sphere.position.x = 5 * Math.sin(time + i * 1.1);
+                sphere.position.y = 5 * Math.cos(time + i);
+            }
+        }
         effect.render(scene, camera);
     };
 
