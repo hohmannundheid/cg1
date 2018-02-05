@@ -67,7 +67,7 @@ function main() {
     var setupScene = function() {
         // Setup textures for environment mapping
         var loader = new THREE.TextureLoader();
-        loader.load('textures/indoor.jpg', function(texture) {
+        loader.load('textures/gallery.jpg', function(texture) {
             texture.mapping = THREE.EquirectangularReflectionMapping;
             texture.magFilter = THREE.LinearFilter;
             texture.minFilter = THREE.LinearMipMapLinearFilter;
