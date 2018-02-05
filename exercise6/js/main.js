@@ -1,12 +1,15 @@
 "use strict"
 
 function main() {
-	var scene = new THREE.Scene();
-	var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-	var renderer = new THREE.WebGLRenderer();
-	renderer.setSize(window.innerWidth, window.innerHeight);
-	renderer.setPixelRatio(window.devicePixelRatio);
-	document.body.appendChild(renderer.domElement);
+    var scene = new THREE.Scene();
+
+    var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 3;
+
+    var renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    document.body.appendChild(renderer.domElement);
 
     var effect;
     var setupEffect = function() {
@@ -33,31 +36,33 @@ function main() {
     };
     setupGUI();
 
-	var envTexture = new THREE.TextureLoader().load('textures/gallery.jpg');
-    envTexture.mapping = THREE.EquirectangularReflectionMapping;
-    envTexture.magFilter = THREE.LinearFilter;
-    envTexture.minFilter = THREE.LinearMipMapLinearFilter;
+    var setupScene = function() {
+        // Setup textures for environment mapping
+        var envTexture = new THREE.TextureLoader().load('textures/gallery.jpg');
+        envTexture.mapping = THREE.EquirectangularReflectionMapping;
+        envTexture.magFilter = THREE.LinearFilter;
+        envTexture.minFilter = THREE.LinearMipMapLinearFilter;
 
-    var rectShader = THREE.ShaderLib['equirect'];
-    var material = new THREE.ShaderMaterial({
-        fragmentShader: rectShader.fragmentShader,
-        vertexShader: rectShader.vertexShader,
-        uniforms: rectShader.uniforms,
-        depthWrite: false,
-        side: THREE.BackSide
-    });
+        var rectShader = THREE.ShaderLib['equirect'];
+        var material = new THREE.ShaderMaterial({
+            fragmentShader: rectShader.fragmentShader,
+            vertexShader: rectShader.vertexShader,
+            uniforms: rectShader.uniforms,
+            depthWrite: false,
+            side: THREE.BackSide
+        });
 
-    material.uniforms['tEquirect'].value = envTexture;
+        material.uniforms['tEquirect'].value = envTexture;
 
-    var cubeMesh = new THREE.Mesh(new THREE.BoxBufferGeometry(100, 100, 100), material);
-    scene.add(cubeMesh);
+        var cubeMesh = new THREE.Mesh(new THREE.BoxBufferGeometry(100, 100, 100), material);
+        scene.add(cubeMesh);
 
-	var geometry = new THREE.SphereBufferGeometry(0.6, 48, 24);
-	var sphereMaterial = new THREE.MeshLambertMaterial({envMap: envTexture});
-	var sphere = new THREE.Mesh(geometry, sphereMaterial);
-	scene.add(sphere);
-
-	camera.position.z = 3;
+        var geometry = new THREE.SphereBufferGeometry(0.6, 48, 24);
+        var sphereMaterial = new THREE.MeshLambertMaterial({envMap: envTexture});
+        var sphere = new THREE.Mesh(geometry, sphereMaterial);
+        scene.add(sphere);
+    };
+    setupScene();
 
     var controls;
     var setupControls = function() {
@@ -70,17 +75,16 @@ function main() {
         controls.staticMoving = true;
         controls.dynamicDampingFactor = 0.3;
         controls.keys = [65, 83, 68];
-        //controls.addEventListener('change', renderer.bind(this));
         controls.minDistance = 0.1;
         controls.maxDistance = 10;
     };
     setupControls();
 
     // Start animation loop
-	var animate = function() {
-		requestAnimationFrame(animate);
+    var animate = function() {
+        requestAnimationFrame(animate);
         controls.update();
-		effect.render(scene, camera);
-	};
-	animate();
+        effect.render(scene, camera);
+    };
+    animate();
 }
