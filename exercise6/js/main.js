@@ -90,7 +90,6 @@ function main() {
             var sphereMaterial = new THREE.MeshBasicMaterial({envMap: texture});
             for (var i = 0; i < 100; i++) {
                 var sphere = new THREE.Mesh(sphereGeom, sphereMaterial);
-                var test = Math.random();
                 sphere.position.x = Math.random() * 10 - 5;
                 sphere.position.y = Math.random() * 10 - 5;
                 sphere.position.z = Math.random() * 10 - 5;
