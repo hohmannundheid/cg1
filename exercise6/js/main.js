@@ -1,3 +1,6 @@
+/**
+ * Inspired by https://github.com/mrdoob/three.js/blob/master/examples/webgl_effects_anaglyph.html
+ */
 "use strict"
 
 function main() {
@@ -11,18 +14,27 @@ function main() {
     renderer.setPixelRatio(window.devicePixelRatio);
     document.body.appendChild(renderer.domElement);
 
-    var effect;
-    var anaglyph = new THREE.AnaglyphEffect(renderer);
-    var stereoscopic = new THREE.StereoEffect(renderer);
-    var setupEffect = function() {
-        if (effect === undefined || params.effect === 'anaglyph') {
-            effect = anaglyph;
-        } else {
-            effect = stereoscopic;
-        }
-        effect.setSize(window.innerWidth, window.innerHeight);
+    window.onresize = function(event) {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        effect.setSize( window.innerWidth, window.innerHeight );
+    }
+
+    var controls;
+    var setupControls = function() {
+        controls = new THREE.TrackballControls(camera, renderer.domElement);
+        controls.rotateSpeed = 3.0;
+        controls.zoomSpeed = 1.2;
+        controls.panSpeed = 0.8;
+        controls.noZoom = false;
+        controls.noPan = false;
+        controls.staticMoving = true;
+        controls.dynamicDampingFactor = 0.3;
+        controls.keys = [65, 83, 68];
+        controls.minDistance = 0.1;
+        controls.maxDistance = 10;
     };
-    setupEffect();
+    setupControls();
 
     var gui = new dat.GUI();
     var params;
@@ -37,6 +49,19 @@ function main() {
         gui.open();
     };
     setupGUI();
+
+    var effect;
+    var anaglyph = new THREE.AnaglyphEffect(renderer);
+    var stereoscopic = new THREE.StereoEffect(renderer);
+    var setupEffect = function() {
+        if (effect === undefined || params.effect === 'anaglyph') {
+            effect = anaglyph;
+        } else {
+            effect = stereoscopic;
+        }
+        effect.setSize(window.innerWidth, window.innerHeight);
+    };
+    setupEffect();
 
     var spheres = [];
     var setupScene = function() {
@@ -76,28 +101,6 @@ function main() {
         });
     };
     setupScene();
-
-    var controls;
-    var setupControls = function() {
-        controls = new THREE.TrackballControls(camera, renderer.domElement);
-        controls.rotateSpeed = 3.0;
-        controls.zoomSpeed = 1.2;
-        controls.panSpeed = 0.8;
-        controls.noZoom = false;
-        controls.noPan = false;
-        controls.staticMoving = true;
-        controls.dynamicDampingFactor = 0.3;
-        controls.keys = [65, 83, 68];
-        controls.minDistance = 0.1;
-        controls.maxDistance = 10;
-    };
-    setupControls();
-
-    window.onresize = function(event) {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        effect.setSize( window.innerWidth, window.innerHeight );
-    }
 
     var render = function() {
         if (spheres.length > 0) {
